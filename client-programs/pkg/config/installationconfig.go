@@ -1,24 +1,30 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
 type VolumeMountConfig struct {
 	HostPath      string `yaml:"hostPath"`
 	ContainerPath string `yaml:"containerPath"`
-	ReadOnly      bool   `yaml:"readOnly,omitempty"`
+	ReadOnly      *bool  `yaml:"readOnly,omitempty"`
 }
 
 type LocalKindClusterConfig struct {
 	ListenAddress string              `yaml:"listenAddress,omitempty"`
+	ApiServer     KindApiServerConfig `yaml:"apiServer,omitempty"`
 	VolumeMounts  []VolumeMountConfig `yaml:"volumeMounts,omitempty"`
+}
+
+type KindApiServerConfig struct {
+	Address string `yaml:"address,omitempty"`
+	Port    int    `yaml:"port,omitempty"`
 }
 
 type LocalDNSResolverConfig struct {
@@ -26,18 +32,59 @@ type LocalDNSResolverConfig struct {
 	ExtraDomains  []string `yaml:"extraDomains,omitempty"`
 }
 
+type AwsClusterInfrastructureIRSARolesConfig struct {
+	ExternalDns string `yaml:"external-dns"`
+	CertManager string `yaml:"cert-manager"`
+}
+
+type AwsClusterInfrastructureConfig struct {
+	AwsId       string                                  `yaml:"awsId,omitempty"`
+	Region      string                                  `yaml:"region"`
+	Route53Zone Route53ZoneConfig                       `yaml:"route53,omitempty"`
+	ClusterName string                                  `yaml:"clusterName,omitempty"`
+	IRSARoles   AwsClusterInfrastructureIRSARolesConfig `yaml:"irsaRoles,omitempty"`
+}
+
+type Route53ZoneConfig struct {
+	HostedZoneId string `yaml:"hostedZone"`
+}
+
+type GcpClusterInfrastructureWorkloadIdentitiesConfig struct {
+	ExternalDns string `yaml:"external-dns"`
+	CertManager string `yaml:"cert-manager"`
+}
+
+type CloudDNSConfig struct {
+	Zone string `yaml:"zone,omitempty"`
+}
+
+type GcpClusterInfrastructureConfig struct {
+	Project   string                                           `yaml:"project,omitempty"`
+	CloudDNS  CloudDNSConfig                                   `yaml:"cloudDNS,omitempty"`
+	IRSARoles GcpClusterInfrastructureWorkloadIdentitiesConfig `yaml:"workloadIdentity,omitempty"`
+}
+
 type ClusterInfrastructureConfig struct {
-	Provider string `yaml:"provider"`
+	// This can be only "kind", "eks", "gke" "custom" for now
+	Provider       string                         `yaml:"provider"`
+	AWS            AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
+	GCP            GcpClusterInfrastructureConfig `yaml:"gcp,omitempty"`
+	CertificateRef CACertificateRefConfig         `yaml:"caCertificateRef,omitempty"`
 }
 
 type PackageConfig struct {
-	Enabled  bool                   `yaml:"enabled"`
+	Enabled  *bool                  `yaml:"enabled,omitempty"`
 	Settings map[string]interface{} `yaml:"settings"`
 }
+
 type ClusterPackagesConfig struct {
-	Contour        PackageConfig `yaml:"contour"`
-	Kyverno        PackageConfig `yaml:"kyverno"`
-	MetaController PackageConfig `yaml:"metacontroller,omitempty"`
+	Contour        PackageConfig `yaml:"contour,omitempty"`
+	CertManager    PackageConfig `yaml:"cert-manager,omitempty"`
+	ExternalDns    PackageConfig `yaml:"external-dns,omitempty"`
+	Certs          PackageConfig `yaml:"certs,omitempty"`
+	Kyverno        PackageConfig `yaml:"kyverno,omitempty"`
+	KappController PackageConfig `yaml:"kapp-controller,omitempty"`
+	Educates       PackageConfig `yaml:"educates,omitempty"`
 }
 
 type TLSCertificateConfig struct {
@@ -60,7 +107,7 @@ type CACertificateRefConfig struct {
 }
 
 type CANodeInjectorConfig struct {
-	Enabled bool `yaml:"enabled"`
+	Enabled *bool `yaml:"enabled"`
 }
 
 type ClusterRuntimeConfig struct {
@@ -111,8 +158,18 @@ type TrainingPortalCredentialsConfig struct {
 	Robot UserCredentialsConfig `yaml:"robot,omitempty"`
 }
 
+type UserClientConfig struct {
+	Id     string `yaml:"id"`
+	Secret string `yaml:"secret"`
+}
+
+type TrainingPortalClientsConfig struct {
+	Robot UserClientConfig `yaml:"robot,omitempty"`
+}
+
 type TrainingPortalConfig struct {
 	Credentials TrainingPortalCredentialsConfig `yaml:"credentials,omitempty"`
+	Clients     TrainingPortalClientsConfig     `yaml:"clients,omitempty"`
 }
 
 type WorkshopSecurityConfig struct {
@@ -136,8 +193,8 @@ type ProxyCacheConfig struct {
 }
 type DockerDaemonConfig struct {
 	NetworkMTU int              `yaml:"networkMTU,omitempty"`
-	Rootless   bool             `yaml:"rootless,omitempty"`
-	Privileged bool             `yaml:"privileged,omitempty"`
+	Rootless   *bool            `yaml:"rootless,omitempty"`
+	Privileged *bool            `yaml:"privileged,omitempty"`
 	ProxyCache ProxyCacheConfig `yaml:"proxyCache,omitempty"`
 }
 
@@ -194,6 +251,16 @@ type WebsiteStylingConfig struct {
 	FrameAncestors       []string                    `yaml:"frameAncestors,omitempty"`
 }
 
+type ImagePullerConfig struct {
+	Enabled       *bool    `yaml:"enabled"`
+	PrePullImages []string `yaml:"prePullImages,omitempty"`
+}
+
+type LookupServiceConfig struct {
+	Enabled       *bool  `yaml:"enabled"`
+	IngressPrefix string `yaml:"ingressPrefix,omitempty"`
+}
+
 type ClusterEssentialsConfig struct {
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
@@ -210,14 +277,18 @@ type TrainingPlatformConfig struct {
 	TrainingPortal    TrainingPortalConfig    `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity  WorkshopSecurityConfig  `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry     ImageRegistryConfig     `yaml:"imageRegistry,omitempty"`
+	Version           string                  `yaml:"version,omitempty"`
 	ImageVersions     []ImageVersionConfig    `yaml:"imageVersions,omitempty"`
 	DockerDaemon      DockerDaemonConfig      `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork    ClusterNetworkConfig    `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics WorkshopAnalyticsConfig `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling    WebsiteStylingConfig    `yaml:"websiteStyling,omitempty"`
+	ImagePuller       ImagePullerConfig       `yaml:"imagePuller,omitempty"`
+	LookupService     LookupServiceConfig     `yaml:"lookupService,omitempty"`
 }
 
 type InstallationConfig struct {
+	Debug                 *bool                       `yaml:"debug,omitempty"`
 	LocalKindCluster      LocalKindClusterConfig      `yaml:"localKindCluster,omitempty"`
 	LocalDNSResolver      LocalDNSResolverConfig      `yaml:"localDNSResolver,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
@@ -231,37 +302,43 @@ type InstallationConfig struct {
 	TrainingPortal        TrainingPortalConfig        `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity      WorkshopSecurityConfig      `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry         ImageRegistryConfig         `yaml:"imageRegistry,omitempty"`
+	Version               string                      `yaml:"version,omitempty"`
 	ImageVersions         []ImageVersionConfig        `yaml:"imageVersions,omitempty"`
 	DockerDaemon          DockerDaemonConfig          `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork        ClusterNetworkConfig        `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics     WorkshopAnalyticsConfig     `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling        WebsiteStylingConfig        `yaml:"websiteStyling,omitempty"`
+	ImagePuller           ImagePullerConfig           `yaml:"imagePuller,omitempty"`
+	LookupService         LookupServiceConfig         `yaml:"lookupService,omitempty"`
 }
 
+type EducatesDomainStruct struct {
+	ClusterIngress ClusterIngressConfig `yaml:"clusterIngress,omitempty"`
+}
+
+const NULL_CONFIG_FILE = "NULL"
+
 func NewDefaultInstallationConfig() *InstallationConfig {
-	localIPAddress, err := HostIP()
-
-	if err != nil {
-		localIPAddress = "127.0.0.1"
-	}
-
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
 		},
 		ClusterPackages: ClusterPackagesConfig{
 			Contour: PackageConfig{
-				Enabled: true,
+				Enabled: utils.BoolPointer(true),
 			},
 			Kyverno: PackageConfig{
-				Enabled: true,
+				Enabled: utils.BoolPointer(true),
+			},
+			Educates: PackageConfig{
+				Enabled: utils.BoolPointer(true),
 			},
 		},
 		ClusterSecurity: ClusterSecurityConfig{
 			PolicyEngine: "kyverno",
 		},
 		ClusterIngress: ClusterIngressConfig{
-			Domain: fmt.Sprintf("%s.nip.io", localIPAddress),
+			Domain: GetHostIpAsDns(),
 		},
 		WorkshopSecurity: WorkshopSecurityConfig{
 			RulesEngine: "kyverno",
@@ -269,31 +346,137 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 	}
 }
 
-func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, error) {
-	config := NewDefaultInstallationConfig()
+func NewInstallationConfigFromUserFile() (*InstallationConfig, error) {
+	config := &InstallationConfig{}
 
-	if configFile != "" {
-		data, err := os.ReadFile(configFile)
+	valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
 
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to read installation config file %s", configFile)
-		}
+	data, err := os.ReadFile(valuesFile)
 
-		if err := yaml.Unmarshal(data, &config); err != nil {
-			return nil, errors.Wrapf(err, "unable to parse installation config file %s", configFile)
+	if err == nil && len(data) != 0 {
+		if err := yaml.UnmarshalStrict(data, &config); err != nil {
+			return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
 		}
 	} else {
-		configFileDir := path.Join(xdg.DataHome, "educates")
-		valuesFile := path.Join(configFileDir, "values.yaml")
-
-		data, err := os.ReadFile(valuesFile)
-
-		if err == nil && len(data) != 0 {
-			if err := yaml.Unmarshal(data, &config); err != nil {
-				return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
-			}
-		}
+		config = NewDefaultInstallationConfig()
 	}
 
 	return config, nil
+}
+
+func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, error) {
+	config := &InstallationConfig{}
+
+	data, err := os.ReadFile(configFile)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read installation config file %s", configFile)
+	}
+
+	if err := yaml.UnmarshalStrict(data, &config); err != nil {
+		return nil, errors.Wrapf(err, "unable to parse installation config file %s", configFile)
+	}
+
+	return config, nil
+}
+
+func ConfigForLocalClusters(configFile string, domain string, local bool) (fullConfig *InstallationConfig, err error) {
+	if configFile == NULL_CONFIG_FILE {
+		fullConfig = NewDefaultInstallationConfig()
+	} else if configFile != "" {
+		fullConfig, err = NewInstallationConfigFromFile(configFile)
+	} else {
+		fullConfig, err = NewInstallationConfigFromUserFile()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if local {
+		if fullConfig.ClusterInfrastructure.Provider != "" &&
+			fullConfig.ClusterInfrastructure.Provider != "kind" &&
+			fullConfig.ClusterInfrastructure.Provider != "custom" {
+			return nil, errors.New("Only kind or custom providers are supported for local clusters. If not provided, will default to kind")
+		}
+
+		if fullConfig.ClusterInfrastructure.Provider == "" {
+			fullConfig.ClusterInfrastructure.Provider = "kind"
+		}
+	}
+
+	if domain != "" {
+		fullConfig.ClusterIngress.Domain = domain
+	}
+
+	// We do resolve domain configuration precedence here
+	fullConfig.ClusterIngress.Domain = EducatesDomain(fullConfig)
+
+	if local {
+		// This augments the installation config with the secrets that are cached locally
+		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+		}
+
+		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+		}
+	}
+
+	if err := ValidateProvider(fullConfig.ClusterInfrastructure.Provider); err != nil {
+		return nil, err
+	}
+
+	return fullConfig, nil
+}
+
+/**
+ * This function will return the configured educates Domain in the following order:
+ * 1. If the domain is set in the installation config, it will return that
+ * 2. If the domain is set in the Educates Package, it will return that
+ * 4. If none of the above are set, it will return the host IP as a DNS
+ */
+func EducatesDomain(config *InstallationConfig) string {
+	if config.ClusterIngress.Domain != "" {
+		return config.ClusterIngress.Domain
+	}
+	// Access config.ClusterPackages.Educates.Settings["ClusterConfig"] and see if there's a value
+	if educatesDomain, ok := config.ClusterPackages.Educates.Settings["clusterIngress"]; ok {
+		// Access educatesDomain.(map[string]interface{})["domain"] and return that
+		p := map[string]interface{}{}
+		if educatesDomainBytes, err := yaml.Marshal(educatesDomain); err == nil {
+			yaml.Unmarshal(educatesDomainBytes, &p)
+			if domain, ok := p["domain"].(string); ok {
+				return domain
+			}
+		}
+	}
+	return GetHostIpAsDns()
+}
+
+func PrintConfigToStdout(config *InstallationConfig) error {
+	data, err := yaml.Marshal(config)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal installation config")
+	}
+
+	// fmt.Println("Configuration to be applied:")
+	// fmt.Println("-------------------------------")
+	// fmt.Println(string(data))
+	os.Stdout.Write(data)
+	// fmt.Println("###############################")
+
+	return nil
+}
+
+func ValidateProvider(provider string) error {
+	switch provider {
+	case "eks", "kind", "gke", "custom", "vcluster", "generic":
+		return nil
+	default:
+		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom, vcluster, generic)")
+	}
 }

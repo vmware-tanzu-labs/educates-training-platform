@@ -4,7 +4,9 @@ kind: Bundle
 metadata:
   name: educates
 authors:
-- name: Graham Dumpleton
-  email: gdumpleton@vmware.com
+  - name: Graham Dumpleton
+    email: graham.dumpleton@broadcom.com
+  - name: Jorge Morales
+    email: jorge.morales@broadcom.com
 websites:
-- url: github.com/vmware-tanzu-labs/educates-package-repository
+  - url: github.com/vmware-tanzu-labs/educates-package-repository

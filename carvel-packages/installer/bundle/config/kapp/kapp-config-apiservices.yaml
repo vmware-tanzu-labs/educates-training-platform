@@ -1,0 +1,16 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [spec, caBundle]
+      - [spec, group]
+      - [spec, groupPriorityMinimum]
+      - [spec, service, name]
+      - [spec, service, namespace]
+      - [spec, service, port]
+      - [spec, version]
+      - [spec, versionPriority]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: apiregistration.k8s.io/v1, kind: APIService }

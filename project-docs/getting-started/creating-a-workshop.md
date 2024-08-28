@@ -30,19 +30,21 @@ It is also recommended that workshop names always be prefixed with `lab-`. This 
 Rendering of instructions
 -------------------------
 
-Educates currently supports two different renderers for workshop instructions. The first and original renderer for workshop instructions included in Educates is called the `classic` renderer. This is a custom dynamic web application for rendering the workshop instructions. It supports the use of Markdown or AsciiDoc.
+Educates currently supports two different renderers for workshop instructions.
 
-When you you ran `educates new-workshop` it defaulted to generating configuration and instructions files for Markdown using the `classic` renderer.
+The preferred renderer is the `hugo` renderer. As the name suggests this makes use of [Hugo](https://gohugo.io/) to generate workshop instructions as static HTML files, using custom layouts provided by Educates. The implementation of the `hugo` renderer within Educates only supports the use of Markdown.
 
-The second renderer for workshop instructions is the `hugo` renderer. As the name suggests this makes use of [Hugo](https://gohugo.io/) to generate workshop instructions as static HTML files, using custom layouts provided by Educates. Hugo only supports the use of Markdown.
+When you ran `educates new-workshop` it defaulted to generating configuration and instructions files for Markdown using the `hugo` renderer.
 
-If you want to generate a new workshop which uses the `hugo` renderer, run the `educates new-workshop` command as:
+An older renderer for workshop instructions included in Educates is called the `classic` renderer. This is a custom dynamic web application for rendering the workshop instructions. It supports the use of Markdown or AsciiDoc.
+
+If you want to generate a new workshop which uses the `classic` renderer, run the `educates new-workshop` command as:
 
 ```
-educates new-workshop lab-new-workshop --template hugo
+educates new-workshop lab-new-workshop --template classic
 ```
 
-The `hugo` renderer was introduced in Educates version 2.6.0. It is expected that in time the `classic` renderer will be deprecated and the `hugo` renderer will be the recommended option.
+The `classic` renderer is deprecated and will in time be removed. If you have existing workshops which use the `classic` renderer, you should convert them to use the `hugo` renderer.
 
 Deploying new workshop
 ----------------------
@@ -91,16 +93,16 @@ Key sub directories and the files contained within them are:
 * ``resources`` - Directory under which Kubernetes custom resources are stored for deploying the workshop using Educates.
 * ``resources/workshop.yaml`` - The custom resource for Educates which describes your workshop and requirements it may have when being deployed.
 
-If you are using the `classic` renderer for workshop instructions you would also have the following files:
-
-* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
-* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
-
-If you are using the `hugo` renderer, instead of ``workshop/modules.yaml`` and ``workshop/workshop.yaml`` you may optionally have the single file:
+If you are using the `hugo` renderer you may optionally have the single file:
 
 * ``workshop/config.yaml`` - Configuration file with details of available modules which make up your workshop, data variables for use in content, and selectable paths through the workshop instructions.
 
 In the case of the `hugo` renderer, if `workshop/config.yaml` doesn't exist or no configuration is included within it, workshop instructions page ordering will be based on file name sort order, or page weights if defined in the meta data of pages.
+
+If you are using the `classic` renderer for workshop instructions you would need to have the following files:
+
+* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
+* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
 
 If your workshop instructions use images, if using the `classic` renderer, the images can be placed in the same directory as the Markdown or AsciiDoc files. If using the `hugo` renderer, you should follow the Hugo convention and place images in the `workshop/static` directory, or use page bundles and include the image for a page in the directory for the page bundle.
 

@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,9 +25,9 @@ import (
 )
 
 type ClusterWorkshopUpdateOptions struct {
+	KubeconfigOptions
 	Name            string
 	Path            string
-	Kubeconfig      string
 	Portal          string
 	WorkshopFile    string
 	WorkshopVersion string
@@ -63,7 +63,11 @@ func (o *ClusterWorkshopUpdateOptions) Run() error {
 		return err
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		return err
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -113,6 +117,12 @@ func (p *ProjectInfo) NewClusterWorkshopUpdateCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,

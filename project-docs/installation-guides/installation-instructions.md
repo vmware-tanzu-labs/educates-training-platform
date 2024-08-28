@@ -2,299 +2,99 @@
 Installation Instructions
 =========================
 
-The installation instructions given here are only needed if you are installing into a dedicated Kubernetes cluster and not using the [local Educates environment](quick-start-guide). Ensure you have read the general documentation about [cluster requirements](cluster-requirements) before proceeding with trying to install Educates.
+The installation instructions given here are only needed if you are installing into a dedicated Kubernetes cluster and not using the [local Educates environment](quick-start-guide). Ensure you have read the general documentation about [cluster requirements](cluster-requirements) before proceeding with trying to install Educates into an existing Kubernetes cluster.
 
-Educates provides a package for installing an ingress controller and other operators it requires, such as Kyverno, so you do not need to have installed these first. Further information on installing these is given below.
-
-Carvel command line tools
--------------------------
-
-These instructions require that you have the Carvel command tools installed and available on the machine from which you are installing Educates. For installing these see:
-
-* [https://carvel.dev/](https://carvel.dev/)
-
-The tools can be installed using a shell script provided by the Carvel project, or using Homebrew on macOS and Linux.
-
-Ensure you are using an up to date version of the tools, and that if you used Homebrew to perform the install, and that was first done a long time ago, that the more recently added ``kctrl`` command line tool was included.
-
-Installing kapp-controller
---------------------------
-
-The standard method for installing Educates relies on the Carvel packaging system and requires that [kapp-controller](https://carvel.dev/kapp-controller/) from Carvel be installed into the Kubernetes cluster.
-
-If you are using a Kubernetes cluster created using Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), it will come preinstalled with ``kapp-controller`` and you do not need to install ``kapp-controller`` yourself.
-
-If you do need to install ``kapp-controller``, further information can be found at:
-
-* [https://carvel.dev/kapp-controller/docs/develop/install/](https://carvel.dev/kapp-controller/docs/develop/install/)
-
-In most circumstances all you should need to do is run:
-
-```bash
-kapp deploy -a kc -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
-```
-
-Loading package definitions
----------------------------
-
-The Carvel packaging ecosystem supports the concept of hosted package repositories, and Educates provides such a package repository.
-
-To find what versions of the Educates package repository are available see:
-
-* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-packages](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-packages)
-
-To add the definitions from the Educates package repository to your Kubernetes cluster first create a namespace for holding them. You could instead use an existing namespace if you desire.
-
-```bash
-kubectl create ns educates-package
-```
-
-Then load the package repository definition by running the command:
-
-```bash
-kctrl package repository add -n educates-package --repository educates --url ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z
-```
-
-In this example we have used ``X.Y.Z`` as the version of the package repository, however you should use whatever is the latest version available from the page linked above.
-
-Once the package repository has been added to your Kubernetes cluster you can verify it is listed by running:
-
-```bash
-kctrl package repository list -n educates-package
-```
-
-You should see output which includes:
-
-```
-Name      Source                                                        Status  
-educates  (imgpkg) ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z    Reconcile succeeded  
-```
-
-To see what packages are now available for installation run:
-
-```bash
-kctrl package available list -n educates-package
-```
-
-The list should include:
-
-```
-Name                             Display name  
-cluster-essentials.educates.dev  Educates Cluster Essentials  
-training-platform.educates.dev   Educates Training Platform  
-```
-
-Neither of the packages has been installed as yet and that will be done in the following steps.
-
-(installing-cluster-essentials)=
-Installing cluster essentials
------------------------------
-
-Educates requires that an ingress controller be installed into the Kubernetes cluster. The recommended ingress controller is [Contour](https://projectcontour.io/).
-
-If an ingress controller has not already been installed, you can install the ``educates-cluster-essentials`` package to install Contour.
-
-The ``educates-cluster-essentials`` package will also install Kyverno. Kyverno is used for security policy enforcement of workshop sessions.
-
-To configure this package create a values file called ``educates-cluster-essentials-values.yaml`` containing:
-
-```yaml
-clusterPackages:
-  contour:
-    enabled: true
-    settings: {}
-  kyverno:
-    enabled: true
-    settings: {}
-
-clusterInfrastructure:
-  provider: ""
-
-clusterSecurity:
-  policyEngine: "kyverno"
-```
-
-This represents the default configuration.
-
-If a suitable ingress controller is already installed set ``clusterPackages.contour.enabled`` to ``false``.
-
-If you are installing on OpenShift, ``clusterPackages.contour.enabled`` must be set to ``false`` as OpenShift already provides an ingress controller in its default installation.
-
-If a suitable version of Kyverno is already installed set ``clusterPackages.kyverno.enabled`` to ``false``.
-
-If neither is required you can skip installing the package completely.
-
-If you are installing to a local Kubernetes cluster created using ``Kind``, set ``clusterInfrastructure.provider`` to ``kind``. The effect of setting this to ``kind`` will be to configure Contour to only create a ``ClusterIP`` service for Envoy and use host ports, and not a load balancer service. It is important that the Kubernetes cluster created using ``Kind`` exports the ingress controller host ports to the underlying host system in this case.
-
-At this time there is no need to set ``clusterInfrastructure.provider`` for any other infrastructure provider, and in those cases Contour will use a ``LoadBalancer`` service for Envoy.
-
-If you need to override any other configuration for Contour, you can add values to ``clusterPackages.contour.settings``. These currently should correspond to the values accepted for the Contour Carvel package provided by TCE.
-
-* [https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages/contour](https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages/contour)
-
-For Kyverno, you can add values to ``clusterPackages.kyverno.settings``. The only setting that can currrently be supplied for Kyverno is ``replicaCount``. This defaults to 1, but can be set to 3 if you want to deploy Kyverno in HA mode.
-
-Next you must override the value of ``clusterSecurity.policyEngine``. The value depends on how your Kubernetes cluster is configured.
-
-If you are installing to OpenShift, ``clusterSecurity.policyEngine`` must be set to ``security-context-constraints``.
-
-If you are installing to a Kubernetes cluster which has pod security policies enabled, and it associates a default pod security policy with all authenticated users, ``clusterSecurity.policyEngine`` must be set to ``pod-security-policies``.
-
-For all other cases you should override ``clusterSecurity.policyEngine`` and set it to ``kyverno``.
-
-You can if necessary set ``clusterSecurity.policyEngine`` to ``none``, but no security policy enforcement will be done, in which case workshop users would not be restricted from running containers with elevated privileges. Using ``none`` is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops. If you do use ``none`` and develop your own workshops, you may also find those workshops will then not work on an Educates instance which does security policy enforcement. It is thus recommended to always at least set this to ``kyverno`` if not restricted otherwise by how the Kubernetes cluster is configured.
-
-Note that the same setting used here for ``clusterSecurity.policyEngine`` will also need to be used later when installing the Educates training platform package.
-
-To install the ``educates-cluster-essentials`` package first determine what versions are included with the Educates package repository you added by running:
-
-```bash
-kctrl package available get -n educates-package --package cluster-essentials.educates.dev
-```
-
-You can then install the desired version by running:
-
-```bash
-kctrl package install -n educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --values-file educates-cluster-essentials-values.yaml --version "X.Y.Z"
-```
-
-Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
-
-The ``--values-file`` option is used to supply the values file you created above. 
-
-Cluster ingress domain
+CLI vs kapp-controller
 ----------------------
 
-For Educates to work it needs to be configured with an ingress domain.
+To install Educates into an existing Kubernetes cluster you have two choices.
 
-If you want to configure Educates to use secure ingress, you need to have a wildcard TLS certificate for that ingress domain. If you do not have a wildcard TLS certificate for the ingress domain, then some features of workshops (such as per session image registries) will not work.
+The first is to use the `educates` CLI. This is a self contained solution and does not require any special operators to be installed into the Kubernetes cluster, nor any special third party packaging tools to be available on the machine from which you are performing the install, beyond having the CLI itself.
 
-The preferred scenario is that you bring your own custom domain name and matching wildcard TLS certificate for that domain.
+The second relies on having the `kapp-controller` operator from the [Carvel](https://carvel.dev/) project pre-installed into the Kubernetes cluster. You will only need to have `kubectl` available on the machine from which you are performing the install.
 
-The first required step in using your own custom domain is to configure your DNS servers with a ``CNAME`` or equivalent entry to map all host name lookups under the domain (e.g., ``*.example.com``) to the IP address or host name of the inbound ingress router for the Kubernetes cluster. How you calculate the IP address or host name of the inbound ingress router will depend on what infrastructure is being used to host the Kubernetes cluster and how the ingress controller was installed.
+The `educates` CLI provides a more convenient experience for installing Educates into an existing Kubernetes cluster, however using the Carvel packages with `kapp-controller` may work better when using a GitOps approach to managing Kubernetes clusters.
 
-In the simplest case, using Contour installed with the ``educates-cluster-essentials`` package where a ``LoadBalancer`` service type for Envoy is being used, you may be able to determine the IP address or host name of the inbound ingress router by running:
+Opinionated cluster install
+---------------------------
 
-```bash
-kubectl get service/envoy -n projectcontour
-```
+Whether using the CLI or `kapp-controller` to facilitate installation of Educates, the Educates installation mechanism provides for an opinionated configuration and installation.
 
-If you have a matching wildcard TLS certificate for the ingress domain, you now need to create a Kubernetes secret for the certificate and load it into the Kubernetes cluster.
+What this means is that it is possible to simply specify the infrastructure provider for the Kubernetes cluster being used and Educates will use a pre-canned configuration suitable for that provider, to install not just the Educates training platform, but other services and Kubernetes operators required by Educates, or which are beneficial when working with that infrastructure provider.
 
-If you had used ``certbot`` to generate the certificate from LetsEncrypt using a DNS challenge, you should be able to create the secret resource file using a command similar to:
+Support is currently provided for the following infrastructure providers.
 
-```bash
-kubectl create secret tls example.com-tls --cert=$HOME/.letsencrypt/config/live/example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/example.com/privkey.pem --dry-run=client -o yaml > example.com-tls.yaml
-```
+* `eks` - Amazon Elastic Kubernetes Service (EKS)
+* `gke` - Google Kubernetes Engine (GKE)
+* `kind` - Kubernetes in Docker (Kind)
+* `vcluster` - Virtual Kubernetes Cluster (Loft)
 
-Replace ``example.com`` with the name of your custom domain name.
+Although using a pre-canned configuration, you can still provide customizations on top to modify what is installed and how.
 
-Load the secret into the Kubernetes cluster using:
+If your infrastructure provider is not supported and you have a generic Kubernetes cluster available which has an ingress controller pre-installed, but nothing else, you can use the `generic` provider.
 
-```bash
-kubectl apply -n default -f example.com-tls.yaml
-```
+If you would rather roll your own configuration from scratch, the `custom` provider should be used but you would then need to provide a complete configuration for Educates along with enabling what other services you want installed.
 
-In this case we created the secret in the ``default`` namespace. You can use a different namespace if desired as the namespace will need to be listed explicitly in the configuration for Educates in a subsequent step.
+Additional installed services
+-----------------------------
 
-If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
+As noted above, when installing Educates, not just the Educates training platform will be installed, but also other services and Kubernetes operators required by Educates, or which are beneficial when working with a specific infrastructure provider.
 
-(create-the-configuration)=
-Create the configuration
-------------------------
+The list of additional services that configuration is provided for and that can be automatically installed are:
 
-With the pre-requisites now installed in the Kubernetes cluster, installation of the Educates training platform can be done using the ``educates-training-platform`` package.
+* `cert-manager` - Certificate manager for Kubernetes.
+* `contour` - Ingress controller for Kubernetes.
+* `external-dns` - External DNS manager for Kubernetes.
+* `kapp-controller` - Carvel package installation operator.
+* `kyverno` - Policy enforcement engine for Kubernetes.
 
-To configure this package create a values file called ``educates-training-platform-values.yaml`` containing:
+Typically Kyverno will always be installed as it is used for security policy enforcement for cluster and workshop security.
+
+The `kapp-controller` operator, although it may not be required for installation, may be required if intending to host workshops that make use of it.
+
+Other services may be automatically installed depending on which infrastructure provider is used.
+
+Package configuration file
+--------------------------
+
+When performing an installation a package configuration file must be supplied with values to configure Educates.
+
+The format of the configuration file is YAML. The minimal configuration which is required will depend on the infrastructure provider in which the Kubernetes cluster is running, with more detailed configuration being required if specifying a `custom` configuration.
+
+In the case of targeting a Kubernetes cluster which was previously created using Kind, the minimum required configuration would be:
 
 ```yaml
+# Specify the infrastructure provider hosting the Kubernetes cluster.
+
+clusterInfrastructure:
+  provider: kind
+
+# Specify the ingress domain to be used to access the workshops hosted by
+# the Educates installation.
+
 clusterIngress:
-  domain: "example.com"
-  tlsCertificateRef:
-    namespace: "default"
-    name: "example.com-tls"
-
-clusterSecurity:
-  policyEngine: "kyverno"
-
-workshopSecurity:
-  rulesEngine: "kyverno"
+  domain: educates-local-dev.test
 ```
 
-This is the most minimal configuration needed to install the Educates training platform.
+The `clusterInfrastructure.provider` property specifies the identifier for the infrastructure provider to which Educates is being installed.
 
-Set ``clusterSecurity.policyEngine`` to the same value you used when installing the ``educates-cluster-essentials`` package.
+The `clusterIngress.domain` property needs to be set to the parent domain under which Educates is to be hosted.
 
-That is, if you are installing to OpenShift, ``clusterSecurity.policyEngine`` must be set to ``security-context-constraints``.
+Where additional configuration is provided, these will override global defaults, or those for a specific infrastructure provider.
 
-If you are installing to a Kubernetes cluster which has pod security policies enabled, and it associates a default pod security policy with all authenticated users, ``clusterSecurity.policyEngine`` must be set to ``pod-security-policies``.
+See the general documentation on [Configuration Settings](configuration-settings) for customizing the Educates installation.
 
-For all other cases you should override ``clusterSecurity.policyEngine`` and set it to ``kyverno``.
+For more details on configuration requirements for specific infrastructure providers see the documentation on [Infrastructure Providers](infrastructure-providers).
 
-The value of ``workshopSecurity.rulesEngine`` should also be set to ``kyverno``. If can be set to ``none``, and this is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops.
+Performing the installation
+---------------------------
 
-For ingresses, set ``clusterIngress.domain`` to your custom domain name, or appropriate ``nip.io`` domain.
+To perform the installation see the documentation on the process you intend using.
 
-If you have a wildcard TLS certificate, update ``clusterSecurity.tlsCertificateRef.name``, setting it to the name of the Kubernetes secret you created containing it. Change ``clusterSecurity.tlsCertificateRef.name`` if you created the secret in a namespace other than ``default``.
+* [CLI Based Installation](cli-based-installation) - Installing Educates using the Educates CLI.
+* [Carvel Based Installation](carvel-based-installation) - Installing Educates using pre-installed `kapp-controller` operator.
 
-If you do not have a wildcard TLS for the domain name you are using, delete the ``tlsCertificateRef`` section, including everything under it. If you comment out the section instead, you must use the ``#!`` comment prefix.
+Note that both of these relate to installing Educates into an existing Kubernetes cluster. If you are trying Educates for the first time it is recommended not to use an existing Kubernetes cluster, but use the Educates CLI to create a local Educates environment, including a Kubernetes cluster, for you.
 
-There are a range of other settings that can optionally be set. For more details on these settings and whether you may need to use them see the documentation on {any}`configuration settings <configuration-settings>`.
-
-Installing training platform
-----------------------------
-
-To install the ``educates-training-platform`` package first determine what versions are included with the Educates package repository you added by running:
-
-```bash
-kctrl package available get -n educates-package --package training-platform.educates.dev
-```
-
-You can then install the desired version by running:
-
-```bash
-kctrl package install -n educates-package --package-install educates-training-platform --package training-platform.educates.dev --values-file educates-training-platform-values.yaml --version "X.Y.Z"
-```
-
-Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
-
-The ``--values-file`` option is used to supply the values file you created above. 
-
-Deleting the installation
--------------------------
-
-It is recommended to remove any workshop environments before deleting Educates from the Kubernetes cluster. This will ensure that everything can be cleaned up properly.
-
-To delete all current running workshop environments run:
-
-```bash
-kubectl delete workshops,trainingportals,workshoprequests,workshopsessions,workshopenvironments --all --cascade=foreground
-```
-
-The ``--cascade=foreground`` command ensures that the command only returns once all workshop environments have been deleted. This is necessary as otherwise deletion will occur in the background.
-
-To make sure everything is deleted, run:
-
-```bash
-kubectl get workshops,trainingportals,workshoprequests,workshopsessions,workshopenvironments --all-namespaces
-```
-
-There should be nothing remaining.
-
-The Educates training platform can then be deleted by running:
-
-```bash
-kctrl package installed delete -n educates-package --package-install educates-training-platform
-```
-
-and confirming that you want to delete it.
-
-Once deletion has finished you can safely re-install the Educates training platform.
-
-If you instead wanted to clean up everything, you can also delete the pre-requisites installed above using:
-
-```bash
-kctrl package installed delete -n educates-package --package-install educates-cluster-essentials
-```
-
-Note that if the ``educates-cluster-essentials`` package was used to install Contour and you were intending to use the Kubernetes cluster for some other purpose, you would need to re-install an ingress controller using some other method.
+* [Quick Start Guide](quick-start-guide) - Quick start guide for installing Educates and deploying a workshop.
+* [Local Environment](local-environment) - More detailed guide for installing a local Educates environment.

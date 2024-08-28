@@ -1324,7 +1324,7 @@ spec:
       registries:
       - content:
         - destination: /lab-k8s-fundamentals-files
-          prefix: /vmware-tanzu-labs/lab-k8s-fundamentals-files
+          prefix: /educates/lab-k8s-fundamentals-files
           stripPrefix: true
         onDemand: true
         urls:
@@ -2561,13 +2561,14 @@ If you need access to the raw registry host details and credentials, they are pr
 * ``REGISTRY_AUTH_FILE`` - Contains the location of the ``docker`` configuration file. Should always be the equivalent of ``$HOME/.docker/config.json``.
 * ``REGISTRY_USERNAME`` - Contains the username for accessing the image registry.
 * ``REGISTRY_PASSWORD`` - Contains the password for accessing the image registry. This will be different for each workshop session.
+* ``REGISTRY_AUTH_TOKEN`` - Contains username and password for accessing the image registry, separated by a colon and base64 encoded.
 * ``REGISTRY_SECRET`` - Contains the name of a Kubernetes secret of type ``kubernetes.io/dockerconfigjson`` added to the session namespace and which contains the registry credentials.
 
 The URL for accessing the image registry adopts the HTTP protocol scheme inherited from the environment variable ``INGRESS_PROTOCOL``. This would be the same HTTP protocol scheme as the workshop sessions themselves use.
 
-If you want to use any of the variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password`` and ``registry_secret``.
+If you want to use any of the variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password``, ``registry_auth_token`` and ``registry_secret``.
 
-The ``registry_host``, ``registry_username``, ``registry_password`` and ``registry_secret`` will also be available as additional session data variables you can use in the workshop definition.
+The ``registry_host``, ``registry_username``, ``registry_password``, ``registry_auth_token`` and ``registry_secret`` will also be available as additional session data variables you can use in the workshop definition.
 
 (enabling-ability-to-use-docker)=
 Enabling ability to use docker

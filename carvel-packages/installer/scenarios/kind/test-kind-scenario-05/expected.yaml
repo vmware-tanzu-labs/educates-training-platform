@@ -1,0 +1,46 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificate:
+          tls.crt: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_CRT"
+            -----END CERTIFICATE-----
+          tls.key: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_KEY"
+            -----END CERTIFICATE-----
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno

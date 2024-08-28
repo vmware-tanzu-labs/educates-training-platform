@@ -1,0 +1,28 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@ if data.values.infraProvider=="custom":
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata":{"name":"external-dns"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by=overlay.subset({"name": "external-dns"})
+        - name: external-dns
+          #@overlay/remove
+          args:
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata":{"name":"external-dns"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by=overlay.subset({"name": "external-dns"})
+        - name: external-dns
+          args: #@ data.values.deployment.args
+
+#@ end

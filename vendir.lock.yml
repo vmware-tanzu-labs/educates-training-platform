@@ -1,43 +1,63 @@
 apiVersion: vendir.k14s.io/v1alpha1
 directories:
 - contents:
-  - git:
-      commitTitle: 'chore(release): 4.2.0...'
-      sha: 5e58e73fda5da5fa4871e4aad3281b9af1777927
-      tags:
-      - v4.2.0
+  - githubRelease:
+      tag: v1.11.5
+      url: https://api.github.com/repos/kyverno/kyverno/releases/154920993
     path: .
-  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/metacontroller/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kyverno/upstream
+- contents:
+  - git:
+      commitTitle: 'chore: add script to update artifacthub digest (#769)...'
+      sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-restricted/upstream
+- contents:
+  - git:
+      commitTitle: 'chore: add script to update artifacthub digest (#769)...'
+      sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-baseline/upstream
+- contents:
+  - git:
+      commitTitle: 'chore: add script to update artifacthub digest (#769)...'
+      sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
-      tag: v1.9.2
-      url: https://api.github.com/repos/kyverno/kyverno/releases/96431508
+      tag: v1.14.7
+      url: https://api.github.com/repos/cert-manager/cert-manager/releases/161627002
     path: .
-  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/cert-manager/upstream
 - contents:
   - git:
-      commitTitle: Upgrade CSI driver to 2.6.3 and CVE Fix (#5655)...
-      sha: fe3d3e73fac75543d83808ff3e970934b0e11c43
+      commitTitle: Update Contour Docker image to v1.28.5....
+      sha: 1f4fe0502fe35c3726bee77f4f9ea06ac4c2f34d
       tags:
-      - v0.13.0-dev.2-556-gfe3d3e73
+      - v1.28.5
     path: .
-  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/contour/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #475 from ingmarfjolla/istio-vs-policy-add...'
-      sha: 497d3c5291260369ba3e89d66a283540371aae78
+      commitTitle: Update Contour Docker image to v1.28.5....
+      sha: 1f4fe0502fe35c3726bee77f4f9ea06ac4c2f34d
+      tags:
+      - v1.28.5
     path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
+  path: session-manager/packages/contour/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #475 from ingmarfjolla/istio-vs-policy-add...'
-      sha: 497d3c5291260369ba3e89d66a283540371aae78
+      commitTitle: 'Merge pull request #4476 from mloiseleur/fix/deps-upgrade...'
+      sha: e490412e6c44459524147febd140f4584d266fc5
+      tags:
+      - v0.14.2
     path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/external-dns/upstream
 - contents:
-  - git:
-      commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
-      sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+  - githubRelease:
+      tag: v0.52.0
+      url: https://api.github.com/repos/carvel-dev/kapp-controller/releases/155438864
     path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-policies/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kapp-controller/upstream
 kind: LockConfig

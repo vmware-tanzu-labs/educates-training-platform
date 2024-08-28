@@ -108,14 +108,27 @@ def purge_expired_workshop_sessions():
                         # workshop session.
 
                         idle_time = timedelta(seconds=response.json()["idle-time"])
+                        last_view = timedelta(seconds=response.json()["last-view"])
 
                         if idle_time >= session.environment.orphaned:
                             logger.info(
-                                "Schedule deletion of orphaned workshop session %s.",
+                                "Schedule deletion of orphaned workshop session %s after period of %s seconds.",
                                 session.name,
+                                idle_time.total_seconds(),
                             )
 
                             report_analytics_event(session, "Session/Orphaned")
+
+                            delete_workshop_session(session).schedule()
+
+                        elif last_view >= (3 * session.environment.orphaned):
+                            logger.info(
+                                "Schedule deletion of inactive workshop session %s after period of %s seconds.",
+                                session.name,
+                                last_view.total_seconds(),
+                            )
+
+                            report_analytics_event(session, "Session/Inactive")
 
                             delete_workshop_session(session).schedule()
 

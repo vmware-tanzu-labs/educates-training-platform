@@ -1,80 +1,133 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/operators"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 )
 
-type AdminPlatformDeployOptions struct {
-	Config            string
-	Kubeconfig        string
-	Provider          string
-	Domain            string
-	Version           string
-	PackageRepository string
+var (
+	adminPlatformDeployExample = `
+  # Deploy educates platform
+  educates admin platform deploy --config config.yaml
+
+  # Get deployment descriptors for a specific provider with provided config
+  educates admin platform deploy --config config.yaml --dry-run
+
+  # Get deployment descriptors for local cluster default installation
+  educates admin platform deploy --local-config --dry-run
+
+  # Deploy educates platform with verbose output
+  educates admin platform deploy --config config.yaml --verbose
+
+  # Deploy educates platform with an alternate domain
+  educates admin platform deploy --config config.yaml --domain test.educates.io
+  educates admin platform deploy --local-config --domain test.educates.io
+
+  # Deploy educates platform without resolving images via kbld (using latest images)
+  educates admin platform deploy --config config.yaml --skip-image-resolution
+
+  # Deploy educates platform showing the changes to be applied to the cluster
+  educates admin platform deploy --config config.yaml --show-changes
+
+  # Install educates with bundle from different repository
+  educates admin platform deploy --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
+
+  # Install educates when locally built (version latest does the same and skips image resolution)
+  educates admin platform deploy --config config.yaml  --package-repository localhost:5001 --version 0.0.1
+  educates admin platform deploy --config config.yaml  --version latest
+
+  # Install educates on a specific cluster
+  educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
+  educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig
+  educates admin platform deploy --config config.yaml --context my-cluster
+  `
+)
+
+type PlatformDeployOptions struct {
+	KubeconfigOptions
+	Config              string
+	Domain              string
+	DryRun              bool
+	Version             string
+	PackageRepository   string
+	Verbose             bool
+	LocalConfig         bool
+	skipImageResolution bool
+	showChanges         bool
 }
 
-func (o *AdminPlatformDeployOptions) Run() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
+func (o *PlatformDeployOptions) Run() error {
+	installer := installer.NewInstaller()
+
+	fullConfig, err := config.ConfigForLocalClusters(o.Config, o.Domain, o.LocalConfig)
 
 	if err != nil {
 		return err
 	}
 
-	if o.Domain != "" {
-		fullConfig.ClusterIngress.Domain = o.Domain
-
-		fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
-
-		fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
-		fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
+	if o.DryRun {
+		if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, false, o.skipImageResolution); err != nil {
+			return errors.Wrap(err, "educates could not be installed")
+		}
+		return nil
 	}
 
-	if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
-		fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
-		fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+	if err != nil {
+		return err
 	}
 
-	if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
-		fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
-		fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+	client, err := clusterConfig.GetClient()
+	if err != nil {
+		return err
 	}
 
-	fullConfig.ClusterInfrastructure.Provider = o.Provider
-
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
-
-	platformConfig := config.TrainingPlatformConfig{
-		ClusterSecurity:   fullConfig.ClusterSecurity,
-		ClusterRuntime:    fullConfig.ClusterRuntime,
-		ClusterIngress:    fullConfig.ClusterIngress,
-		SessionCookies:    fullConfig.SessionCookies,
-		ClusterStorage:    fullConfig.ClusterStorage,
-		ClusterSecrets:    fullConfig.ClusterSecrets,
-		TrainingPortal:    fullConfig.TrainingPortal,
-		WorkshopSecurity:  fullConfig.WorkshopSecurity,
-		ImageRegistry:     fullConfig.ImageRegistry,
-		ImageVersions:     fullConfig.ImageVersions,
-		DockerDaemon:      fullConfig.DockerDaemon,
-		ClusterNetwork:    fullConfig.ClusterNetwork,
-		WorkshopAnalytics: fullConfig.WorkshopAnalytics,
-		WebsiteStyling:    fullConfig.WebsiteStyling,
+	// This creates the educates-secrets namespace if it doesn't exist and creates the
+	// wildcard and CA secrets in there
+	if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
+		return err
 	}
 
-	return operators.DeployOperators(o.Version, o.PackageRepository, clusterConfig, &platformConfig)
+	err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, false, o.skipImageResolution, o.showChanges)
+	if err != nil {
+		return errors.Wrap(err, "educates could not be installed")
+	}
+
+	// This is for hugo livereload (educates serve-workshop). Reconfigures the loopback service
+	// We do create this loopback service for all providers except vcluster, as vcluster will map
+	// it's own service to the host's loopback service to use the host's single loopback service
+	if fullConfig.ClusterInfrastructure.Provider != "vcluster" {
+		if err = cluster.CreateLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("\nEducates has been installed succesfully")
+
+	return nil
 }
 
 func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
-	var o AdminPlatformDeployOptions
+	var o PlatformDeployOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "deploy",
-		Short: "Deploy platform operators",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		Short: "Install Educates and related cluster services onto your cluster in an imperative manner",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if o.LocalConfig {
+				o.Config = ""
+			}
+			return o.Run()
+		},
+		Example: adminPlatformDeployExample,
 	}
 
 	c.Flags().StringVar(
@@ -90,16 +143,28 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
 	)
 	c.Flags().StringVar(
-		&o.Provider,
-		"provider",
-		"kind",
-		"infastructure provider deployment is being made to",
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVar(
 		&o.Domain,
 		"domain",
 		"",
 		"wildcard ingress subdomain name for Educates",
+	)
+	c.Flags().BoolVar(
+		&o.DryRun,
+		"dry-run",
+		false,
+		"prints to stdout the yaml that would be deployed to the cluster",
+	)
+	c.Flags().BoolVar(
+		&o.Verbose,
+		"verbose",
+		false,
+		"print verbose output",
 	)
 	c.Flags().StringVar(
 		&o.PackageRepository,
@@ -113,6 +178,26 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		p.Version,
 		"version to be installed",
 	)
+	c.Flags().BoolVar(
+		&o.LocalConfig,
+		"local-config",
+		false,
+		"Use local configuration. When used, --config and --domain flags are ignored",
+	)
+	c.Flags().BoolVar(
+		&o.skipImageResolution,
+		"skip-image-resolution",
+		false,
+		"skips resolution of referenced images so that all will be fetched from their original location",
+	)
+	c.Flags().BoolVar(
+		&o.showChanges,
+		"show-changes",
+		false,
+		"shows the diffs to be applied to the cluster when running the install",
+	)
+	c.MarkFlagsMutuallyExclusive("config", "local-config")
+	c.MarkFlagsOneRequired("config", "local-config")
 
 	return c
 }

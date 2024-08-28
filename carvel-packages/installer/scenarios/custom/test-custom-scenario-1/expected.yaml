@@ -1,0 +1,25 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings: {}
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          cert-manager.custom: "true"
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: false
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings: {}

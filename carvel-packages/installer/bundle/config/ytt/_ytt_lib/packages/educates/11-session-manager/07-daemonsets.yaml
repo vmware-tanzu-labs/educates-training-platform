@@ -1,0 +1,56 @@
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_reference", "image_pull_secrets", "image_pull_policy")
+
+#@ prepull = []
+#@ prepull.append("training-portal")
+#@ prepull.extend(data.values.imagePuller.prePullImages)
+
+---
+#@ if data.values.imagePuller.enabled:
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: image-puller
+  namespace: #@ data.values.operator.namespace
+spec:
+  selector:
+    matchLabels:
+      app: image-puller
+  template:
+    metadata:
+      labels:
+        app: image-puller
+    spec:
+      serviceAccountName: image-puller
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        #! seccompProfile:
+        #!   type: RuntimeDefault
+      initContainers:
+      #@ images = data.values.imageVersions
+      #@ for i in range(len(prepull)):
+      #@ image = image_reference(prepull[i])
+      #@ if image:
+      - name: #@ prepull[i]
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
+        command: ["/bin/true"]
+      #@ end
+      #@ end
+      containers:
+      - name: pause
+        #@ image = image_reference("pause-container")
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+      #@ pull_secrets = image_pull_secrets()
+      #@ if pull_secrets:
+      #@overlay/match missing_ok=True
+      imagePullSecrets: #@ [{"name": name} for name in pull_secrets]
+      #@ end
+
+#@ end

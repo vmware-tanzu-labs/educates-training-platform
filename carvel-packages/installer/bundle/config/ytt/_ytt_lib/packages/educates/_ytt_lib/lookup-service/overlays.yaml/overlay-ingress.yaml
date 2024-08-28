@@ -1,0 +1,15 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@overlay/match by=overlay.subset({"kind":"Ingress"})
+---
+spec:
+  rules:
+  #@overlay/match by=overlay.index(0)
+  - host: #@ data.values.tld
+  #@overlay/match missing_ok=True
+  #@ if/end data.values.certName != None:
+  tls:
+  - hosts:
+    - #@ data.values.tld
+    secretName: #@ data.values.certName

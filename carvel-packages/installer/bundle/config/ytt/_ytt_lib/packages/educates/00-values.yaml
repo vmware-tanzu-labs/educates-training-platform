@@ -1,0 +1,18 @@
+#@data/values
+
+---
+imageVersions:
+- name: debian-base-image
+  image: "debian:sid-20230502-slim"
+- name: docker-in-docker
+  image: "docker:20.10.18-dind"
+- name: rancher-k3s-v1.27
+  image: "rancher/k3s:v1.27.14-k3s1"
+- name: rancher-k3s-v1.28
+  image: "rancher/k3s:v1.28.10-k3s1"
+- name: rancher-k3s-v1.29
+  image: "rancher/k3s:v1.29.5-k3s1"
+- name: rancher-k3s-v1.30
+  image: "rancher/k3s:v1.30.1-k3s1"
+- name: loftsh-vcluster
+  image: "loftsh/vcluster:0.18.1"

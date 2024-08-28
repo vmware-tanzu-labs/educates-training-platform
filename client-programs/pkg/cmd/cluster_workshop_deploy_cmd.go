@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/maphash"
 	"io"
 	"math/rand"
 	"net/http"
@@ -13,10 +14,10 @@ import (
 	"strings"
 	"time"
 
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -25,9 +26,9 @@ import (
 )
 
 type ClusterWorkshopDeployOptions struct {
+	KubeconfigOptions
 	Name            string
 	Path            string
-	Kubeconfig      string
 	Portal          string
 	Capacity        uint
 	Reserved        uint
@@ -76,7 +77,11 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 		return err
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		return err
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -134,6 +139,12 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,
@@ -626,7 +637,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 }
 
 func randomPassword(length int) string {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
 
 	chars := []rune("!#%+23456789:=?@ABCDEFGHJKLMNPRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
 

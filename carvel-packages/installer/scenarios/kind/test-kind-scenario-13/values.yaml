@@ -1,0 +1,16 @@
+---
+clusterInfrastructure:
+  provider: "kind"
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      configFileContents:
+        defaultHttpVersions:
+          - "HTTP/1.1"
+  kapp-controller:
+    enabled: true
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"

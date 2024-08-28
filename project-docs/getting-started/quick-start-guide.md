@@ -15,7 +15,7 @@ To deploy Educates on your local machine using the Educates command line tool th
 
 * You need to be running macOS or Linux. If using Windows you will need WSL (Windows subsystem for Linux). The Educates command line tool has primarily been tested on macOS.
 
-* You need to have a working `docker` environment. The Educates command line tool has primarily been tested with Docker Desktop on macOS.
+* You need to have a working `docker` environment. The Educates command line tool has primarily been tested with [Docker Desktop](https://www.docker.com/products/docker-desktop/) but you can use [Colima](https://github.com/abiosoft/colima) if you are running on macOS.
 
 * You need to have sufficient memory and disk resources allocated to the `docker` environment to run Kubernetes, Educates etc.
 
@@ -27,16 +27,26 @@ To deploy Educates on your local machine using the Educates command line tool th
 
 * You need to have port 5001 available on the local machine as this will be used for a local image registry.
 
-If you are using Docker Desktop, you need to have the following enabled:
-
-* Use kernel networking for UDP (Settings->Resources->Network).
+If you are using [Docker Desktop](https://www.docker.com/products/docker-desktop/), you will need to enable the following:
 
 * Allow the default Docker socket to be used (Settings->Advanced).
 
 * Allow privileged port mapping (Settings->Advanced).
 
+Depending on the Docker Desktop version you are running, you may also need to enable/disable:
+
+* Use kernel networking for UDP (Settings->Resources->Network).
+
+In case you are using [Colima](https://github.com/abiosoft/colima), you need to add the following lines to the educates configuration file:
+
+```
+$ educates local config edit
+localKindCluster:
+  listenAddress: 0.0.0.0
+```
+
 Downloading the CLI
------------------------
+-------------------
 
 To download the Educates CLI visit the releases page at:
 
@@ -44,14 +54,44 @@ To download the Educates CLI visit the releases page at:
 
 Find the most recent released version and download the `educates` CLI program for your platform.
 
-* `educates-linux-amd64` - Linux (Intel 64)
-* `educates-linux-arm64` - Linux (ARM 64)
-* `educates-darwin-amd64` - macOS (Intel 64 or Apple silicon)
-* `educates-darwin-arm64` - macOS (Apple silicon)
+* `educates-linux-amd64` - Linux (amd64)
+* `educates-linux-arm64` - Linux (arm64)
+* `educates-darwin-amd64` - macOS (amd64)
+* `educates-darwin-arm64` - macOS (arm64)
 
 Rename the downloaded program to `educates`, make it executable (`chmod +x educates`), and place it somewhere in your application search path.
 
-If you are running macOS with Apple silicon (arm64), the Intel 64 (amd64) binary will be run under Rosetta emulation, however, by using it you will be able to use both `amd64` and `arm64` images in the Kubernetes cluster. If you use the Apple silicon (arm64) binary you will only be able to use `amd64` images in the Kubernetes cluster. Neither of the macOS binaries are signed so you will need to tell macOS to trust it before you can run it.
+To download the latest version using `curl` and mark it executable, you can use the appropriate command for your operating system and architecture below.
+
+::::{tab-set}
+
+:::{tab-item} Linux (amd64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-linux-amd64 && chmod +x educates
+```
+:::
+
+:::{tab-item} Linux (arm64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-linux-arm64 && chmod +x educates
+```
+:::
+
+:::{tab-item} macOS (amd64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-darwin-amd64 && chmod +x educates
+```
+:::
+
+:::{tab-item} macOS (arm64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-darwin-arm64 && chmod +x educates
+```
+:::
+
+::::
+
+If you are running macOS with Apple silicon (arm64), the Intel 64 (amd64) binary will still work and be run under Rosetta emulation, however, by using it you will be able to use both `amd64` and `arm64` images in the Kubernetes cluster. If you use the Apple silicon (arm64) binary you will only be able to use `amd64` images in the Kubernetes cluster. Neither of the macOS binaries are signed so you will need to tell macOS to trust it before you can run it.
 
 The `educates` CLI can also be downloaded from the `vmware-tanzu-labs/educates-training-platform` GitHub repository packaged as an OCI image using the command:
 
@@ -82,7 +122,7 @@ Default ingress domain
 
 Educates requires a valid fully qualified domain name (FQDN) to use with Kubernetes ingresses which it creates.
 
-By default, the scripts will automatically use a `nip.io` address which consists of the IP address of your local machine as the ingress domain. For example `192-168-1-1.nip.io`.
+By default, the `educates` CLI when creating a cluster will automatically use a `nip.io` address which consists of the IP address of your local machine as the ingress domain. For example `192-168-1-1.nip.io`.
 
 If a `nip.io` address is relied upon, some features of Educates may not be able to be used. This is because those features require that you also have access to a wildcard TLS certificate for the ingress domain. Since you don't control the `nip.io` domain, there is no way for you to generate the required TLS certificate using a service such as LetsEncrypt. You could however using your own self signed certificate authority (CA) create a wildcard TLS certificate for the `nip.io` domain but you will need to configure macOS to use the CA, as well as configure Educates to know about the CA.
 
@@ -125,7 +165,7 @@ The Educates CLI is intended primarily for people who need to create workshop co
 To deploy this workshop run:
 
 ```
-educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
+educates deploy-workshop -f https://github.com/educates/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
 ```
 
 This will load the workshop resource definition into the Kubernetes cluster. If a training portal instance is not already running one will be deployed. A workshop environment for this specific workshop will then be created and registered with the training portal.
@@ -171,7 +211,7 @@ Deleting the workshop
 When you no longer require this workshop and wish to delete the workshop environment, run:
 
 ```
-educates delete-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
+educates delete-workshop -f https://github.com/educates/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
 ```
 
 This requires you to provide the same URL for the location of the workshop definition you used when you deployed the workshop. If you do not remember the URL, you can view it by running:

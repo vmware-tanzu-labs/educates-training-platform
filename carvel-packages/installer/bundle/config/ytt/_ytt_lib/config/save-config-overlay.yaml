@@ -1,0 +1,22 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
+#@ load("functions.star", "removeNulls")
+
+#! We create educates namespace in case educates package is not enabled
+#@ if/end not data.values.values.clusterPackages.educates.enabled:
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: educates
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: educates-config
+  namespace: educates
+data:
+  config.yaml: #@ yaml.encode(removeNulls(data.values.config))
+  values.yaml: #@ yaml.encode(data.values.values)

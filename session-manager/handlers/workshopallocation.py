@@ -126,6 +126,7 @@ def workshop_allocation_resume(name, **_):
 )
 def workshop_allocation_create(
     name,
+    body,
     uid,
     meta,
     spec,
@@ -146,8 +147,16 @@ def workshop_allocation_create(
     portal_name = meta.get("labels", {}).get(
         f"training.{OPERATOR_API_GROUP}/portal.name", ""
     )
+    portal_uid = meta.get("labels", {}).get(
+        f"training.{OPERATOR_API_GROUP}/portal.uid", ""
+    )
 
     environment_name = spec["environment"]["name"]
+
+    environment_uid = meta.get("labels", {}).get(
+        f"training.{OPERATOR_API_GROUP}/environment.uid", ""
+    )
+
     workshop_namespace = environment_name
 
     session_name = spec["session"]["name"]
@@ -447,7 +456,9 @@ def workshop_allocation_create(
                 f"training.{OPERATOR_API_GROUP}/component.group": "objects",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 f"training.{OPERATOR_API_GROUP}/session.objects": "true",
             }
@@ -481,6 +492,17 @@ def workshop_allocation_create(
                 object_type,
                 object_namespace,
                 session_name,
+            )
+
+            report_analytics_event(
+                "Resource/PermanentError",
+                {
+                    "kind": "WorkshopAllocation",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "message": f"Unable to create workshop request objects for workshop session, failed on creating workshop request object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                },
             )
 
             patch["status"] = {

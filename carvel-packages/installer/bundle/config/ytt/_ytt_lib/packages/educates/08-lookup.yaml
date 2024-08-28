@@ -1,0 +1,35 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:library", "library")
+#@ load("@ytt:template", "template")
+#@ load("/00-package.star", "image_reference", "image_pull_policy")
+
+#@ ingress_certificate = getattr(data.values.clusterIngress.tlsCertificate, "tls.crt")
+#@ ingress_private_key = getattr(data.values.clusterIngress.tlsCertificate, "tls.key")
+#@ image =  image_reference("lookup-service")
+
+#@ if data.values.clusterIngress.tlsCertificateRef.name != None:
+#@   ingress_secret = data.values.clusterIngress.tlsCertificateRef.name
+#@ elif (ingress_certificate and ingress_private_key):
+#@   ingress_secret = "{}-tls".format(data.values.clusterIngress.domain)
+#@ end
+
+#@ ingress_ca_secret = data.values.clusterIngress.caCertificateRef.name
+
+#@ workshop_base_image = image_reference("base-environment")
+#@ workshop_base_image_pull_policy = image_pull_policy(workshop_base_image)
+
+#@ def lookup_service_values():
+tld: #@ "{}.{}".format(data.values.lookupService.ingressPrefix, data.values.clusterIngress.domain)
+certName: #@ ingress_secret
+caName: #@ ingress_ca_secret
+image: #@ image
+imagePullPolicy: #@ image_pull_policy(image)
+workshopBaseImage: #@ workshop_base_image
+workshopBaseImagePullPolicy: #@ workshop_base_image_pull_policy
+#@ end
+
+#@ if data.values.lookupService.enabled:
+--- #@ template.replace(library.get("lookup-service").with_data_values(lookup_service_values(), plain=True).eval())
+#@ end
+
+--- #@ template.replace(library.get("lookup-service-token").with_data_values({}, plain=True).eval())

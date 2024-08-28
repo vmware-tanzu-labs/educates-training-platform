@@ -1,0 +1,16 @@
+clusterInfrastructure:
+  provider: "kind"
+clusterPackages:
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: "educates.example.com"
+      lookupService:
+        enabled: false
+        ingressPrefix: "THIS_SHOULD_GO_AWAY"
+clusterIngress:
+  domain: "THIS.domain.should.remain"
+lookupService:
+  enabled: true
+  ingressPrefix: "THIS_SHOULD_REMAIN"

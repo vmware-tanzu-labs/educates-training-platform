@@ -1,0 +1,11 @@
+clusterPackages:
+  kyverno:
+    enabled: false
+  educates:
+    enabled: false
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"

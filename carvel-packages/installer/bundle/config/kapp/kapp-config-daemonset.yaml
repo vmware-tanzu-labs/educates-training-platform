@@ -1,0 +1,37 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [spec, selector, matchLabels, "kapp.k14s.io/app"]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: apps/v1, kind: DaemonSet }
+  - paths:
+      - [metadata, annotations, "deprecated.daemonset.template.generation"]
+      - [spec, revisionHistoryLimit]
+      - [spec, updateStrategy]
+      - [spec, template, metadata, creationTimestamp]
+      - [spec, template, spec, containers, { allIndexes: true }, livenessProbe]
+      - [spec, template, spec, containers, { allIndexes: true }, readinessProbe]
+      - [spec, template, spec, containers, { allIndexes: true }, startupProbe]
+      - [spec, template, spec, containers, { allIndexes: true }, resources]
+      - [spec, template, spec, containers, { allIndexes: true }, env]
+      - [spec, template, spec, containers, { allIndexes: true }, terminationMessagePath]
+      - [spec, template, spec, containers, { allIndexes: true }, terminationMessagePolicy]
+      - [spec, template, spec, containers, { allIndexes: true }, securityContext]
+      - [spec, template, spec, securityContext]
+      - [spec, template, spec, dnsPolicy]
+      - [spec, template, spec, initContainers, { allIndexes: true }, resources]
+      - [spec, template, spec, initContainers, { allIndexes: true }, env]
+      - [spec, template, spec, initContainers, { allIndexes: true }, terminationMessagePath]
+      - [spec, template, spec, initContainers, { allIndexes: true }, terminationMessagePolicy]
+      - [spec, template, spec, restartPolicy]
+      - [spec, template, spec, schedulerName]
+      - [spec, template, spec, serviceAccount]
+      - [spec, template, spec, terminationGracePeriodSeconds]
+      - [spec, template, spec, volumes, { allIndexes: true }, secret, defaultMode]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: apps/v1, kind: DaemonSet }

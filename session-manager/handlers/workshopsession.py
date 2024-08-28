@@ -98,7 +98,9 @@ def _setup_session_namespace(
     primary_namespace_body,
     workshop_name,
     portal_name,
+    portal_uid,
     environment_name,
+    environment_uid,
     session_name,
     workshop_namespace,
     session_namespace,
@@ -202,7 +204,9 @@ def _setup_session_namespace(
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -277,7 +281,9 @@ def _setup_session_namespace(
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -311,7 +317,9 @@ def _setup_session_namespace(
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -342,7 +350,9 @@ def _setup_session_namespace(
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -371,15 +381,10 @@ def _setup_session_namespace(
         registry_host = applications.property("registry", "host")
         registry_username = applications.property("registry", "username")
         registry_password = applications.property("registry", "password")
+        registry_auth_token = applications.property("registry", "basic_auth_token")
         registry_secret = applications.property("registry", "secret")
 
-        registry_basic_auth = (
-            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
-            .decode("ascii")
-            .strip()
-        )
-
-        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_auth_token}"}}}
 
         secret_body = {
             "apiVersion": "v1",
@@ -391,7 +396,9 @@ def _setup_session_namespace(
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -412,7 +419,9 @@ def _setup_session_namespace(
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
@@ -432,7 +441,9 @@ def _setup_session_namespace(
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
@@ -448,7 +459,9 @@ def _setup_session_namespace(
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
@@ -464,7 +477,9 @@ def _setup_session_namespace(
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
@@ -501,7 +516,7 @@ def _setup_session_namespace(
     "v1beta1",
     "workshopsessions",
 )
-def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
+def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, **_):
     # Report analytics event indicating processing workshop session.
 
     report_analytics_event(
@@ -553,12 +568,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
 
+    environment_uid = environment_instance.obj["metadata"]["uid"]
+
     # Can optionally be passed name of the training portal via a label
     # when the workshop environment is created as a child to a training
     # portal.
 
     portal_name = meta.get("labels", {}).get(
         f"training.{OPERATOR_API_GROUP}/portal.name", ""
+    )
+    portal_uid = meta.get("labels", {}).get(
+        f"training.{OPERATOR_API_GROUP}/portal.uid", ""
     )
 
     # We pull details of the workshop to be deployed from the status of the
@@ -640,11 +660,21 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
         registry_host = f"registry-{session_namespace}.{INGRESS_DOMAIN}"
         registry_username = session_namespace
         registry_password = "".join(random.sample(characters, 32))
+
+        registry_auth_token = (
+            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
+            .decode("ascii")
+            .strip()
+        )
+
         registry_secret = f"{OPERATOR_NAME_PREFIX}-registry-credentials"
 
         applications.properties("registry")["host"] = registry_host
         applications.properties("registry")["username"] = registry_username
         applications.properties("registry")["password"] = registry_password
+
+        applications.properties("registry")["basic_auth_token"] = registry_auth_token
+
         applications.properties("registry")["secret"] = registry_secret
 
     # Generate a random password to be used for any services or applications
@@ -717,7 +747,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
                 f"training.{OPERATOR_API_GROUP}/policy.name": namespace_security_policy,
@@ -737,7 +769,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
         pykube.Namespace(api, namespace_body).create()
 
     except pykube.exceptions.PyKubeError as exc:
-        if e.code == 409:
+        if exc.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Namespace {session_namespace} already exists."
@@ -809,7 +841,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
@@ -844,6 +878,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "type": "kubernetes.io/service-account-token",
@@ -880,7 +915,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
@@ -925,7 +962,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
         namespace_instance.obj,
         workshop_name,
         portal_name,
+        portal_uid,
         environment_name,
+        environment_uid,
         session_name,
         workshop_namespace,
         session_namespace,
@@ -1017,12 +1056,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
 
-    application_variables_list = substitute_variables(
-        application_variables_list, session_variables
-    )
-
     for variable in application_variables_list:
-        session_variables[variable["name"]] = variable["value"]
+        session_variables[variable["name"]] = substitute_variables(
+            variable["value"], session_variables
+        )
 
     if applications.is_enabled("registry"):
         session_variables.update(
@@ -1030,6 +1067,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 registry_host=registry_host,
                 registry_username=registry_username,
                 registry_password=registry_password,
+                registry_auth_token=registry_auth_token,
                 registry_secret=registry_secret,
             )
         )
@@ -1070,7 +1108,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -1109,7 +1149,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/component.group": "variables",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
@@ -1128,8 +1170,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     try:
         pykube.Secret(api, variables_secret_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
-        if e.code == 409:
+    except pykube.exceptions.PyKubeError as exc:
+        if exc.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
             raise kopf.TemporaryError(
                 f"Session variables secret {session_namespace}-session already exists."
@@ -1166,7 +1208,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                         f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
                         f"training.{OPERATOR_API_GROUP}/policy.name": target_security_policy,
@@ -1187,8 +1231,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             try:
                 pykube.Namespace(api, namespace_body).create()
 
-            except pykube.exceptions.PyKubeError as e:
-                if e.code == 409:
+            except pykube.exceptions.PyKubeError as exc:
+                if exc.code == 409:
                     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.TemporaryError(
                         f"Secondary namespace {target_namespace} already exists."
@@ -1199,7 +1243,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 namespace_instance.obj,
                 workshop_name,
                 portal_name,
+                portal_uid,
                 environment_name,
+                environment_uid,
                 session_name,
                 workshop_namespace,
                 session_namespace,
@@ -1249,7 +1295,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 f"training.{OPERATOR_API_GROUP}/session.objects": "true",
             }
@@ -1357,6 +1405,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     session_name,
                 )
 
+                report_analytics_event(
+                    "Resource/PermanentError",
+                    {
+                        "kind": "WorkshopSession",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    },
+                )
+
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Failed",
@@ -1374,7 +1433,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 namespace_instance.obj,
                 workshop_name,
                 portal_name,
+                portal_uid,
                 environment_name,
+                environment_uid,
                 session_name,
                 workshop_namespace,
                 session_namespace,
@@ -1406,6 +1467,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     object_type,
                     object_namespace,
                     session_name,
+                )
+
+                report_analytics_event(
+                    "Resource/PermanentError",
+                    {
+                        "kind": "WorkshopSession",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    },
                 )
 
                 patch["status"] = {
@@ -1508,7 +1580,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/application": "workshop",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 f"training.{OPERATOR_API_GROUP}/session.services.workshop": "true",
             },
@@ -1525,7 +1599,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                         f"training.{OPERATOR_API_GROUP}/application": "workshop",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                         f"training.{OPERATOR_API_GROUP}/session.services.workshop": "true",
                     },
@@ -1986,7 +2062,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -2124,7 +2202,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
@@ -2272,7 +2352,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
@@ -2333,7 +2415,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
@@ -2411,12 +2495,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     # Add in extra configuration for registry and create session objects.
 
     if applications.is_enabled("registry"):
-        registry_basic_auth = (
-            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
-            .decode("ascii")
-            .strip()
-        )
-
         registry_htpasswd_hash = bcrypt.hashpw(
             bytes(registry_password, "ascii"), bcrypt.gensalt(prefix=b"2a")
         ).decode("ascii")
@@ -2439,6 +2517,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             {
                 "name": "REGISTRY_PASSWORD",
                 "value": registry_password,
+            }
+        )
+        additional_env.append(
+            {
+                "name": "REGISTRY_AUTH_TOKEN",
+                "value": registry_auth_token,
             }
         )
         additional_env.append(
@@ -2509,7 +2593,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
@@ -2524,7 +2610,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     "storageClassName"
                 ] = CLUSTER_STORAGE_CLASS
 
-        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_auth_token}"}}}
 
         registry_config_map_body = {
             "apiVersion": "v1",
@@ -2536,7 +2622,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -2560,7 +2648,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/application": "registry",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     f"training.{OPERATOR_API_GROUP}/session.services.registry": "true",
                 },
@@ -2579,7 +2669,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                             f"training.{OPERATOR_API_GROUP}/application": "registry",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                             f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                             f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                             f"training.{OPERATOR_API_GROUP}/session.services.registry": "true",
                         },
@@ -2700,7 +2792,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/application": "registry",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -2723,7 +2817,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/application": "registry",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
@@ -2804,7 +2900,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
@@ -2867,7 +2965,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/application": "workshop",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
@@ -3009,7 +3109,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 f"training.{OPERATOR_API_GROUP}/application": "workshop",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
@@ -3128,22 +3230,14 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
     # session and not when using training portal. Set phase to Running
-    # if standalone workshop environment or Available if associated
-    # with a training portal. The latter can be overridden though if
-    # the training portal had already set the phase before the operator
-    # had managed to process the resource.
+    # if standalone workshop environment. Where created by a training
+    # portal it will set the status itself appropriately.
 
     url = f"{INGRESS_PROTOCOL}://{session_hostname}"
 
     phase = "Running"
 
-    if portal_name:
-        phase = status.get(OPERATOR_STATUS_KEY, {}).get("phase", "Available")
-
-    patch["status"] = {}
-
-    patch["status"][OPERATOR_STATUS_KEY] = {
-        "phase": phase,
+    changes = {
         "message": None,
         "url": url,
         "sshd": {
@@ -3152,6 +3246,13 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 "enabled": applications.property("sshd", "tunnel.enabled", False)
             },
         },
+    }
+
+    if not portal_name:
+        changes["phase"] = phase
+
+    patch["status"] = {
+        OPERATOR_STATUS_KEY: changes,
     }
 
 

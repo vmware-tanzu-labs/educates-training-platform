@@ -1,0 +1,51 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:library", "library")
+#@ load("@ytt:template", "template")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:struct", "struct")
+#@ load("@ytt:yaml", "yaml")
+#@ load("functions/kapp-annotations.lib.yaml", "addKappAnnotations")
+
+#@ orderedPackagesList = [
+#@    "cert-manager",
+#@    "contour",
+#@    "external-dns",
+#@    "certs",
+#@    "kyverno",
+#@    "kapp-controller",
+#@    "educates"
+#@ ]
+
+#@ def getOverlaysFromLibrary():
+#@  if hasattr(data.values.clusterInfrastructure, "provider"):
+#@    infra = "infrastructure/" + data.values.clusterInfrastructure.provider
+#@    return library.get(infra).with_data_values(data.values).eval()
+#@  end
+#@ end
+
+#@ overlayedValues = data.values
+#@ for overlayToApply in getOverlaysFromLibrary():
+#@   overlayedValues = struct.encode(yaml.decode(yaml.encode(overlay.apply(overlayedValues, overlayToApply))))
+#@ end
+
+#! TODO: Here would be nice to calculate all the certificate specifics and then pass them to the overlayedValues
+
+#@ if data.values.debug:
+--- #@ overlayedValues
+#@ else:
+#@   for name in orderedPackagesList: #! overlayedValues.clusterPackages:
+#@     package = overlayedValues.clusterPackages[name]
+#@     packagePath = "packages/" + name
+#@     packageValues = package.settings
+#@     if package.enabled:
+--- #@ template.replace(overlay.apply(library.get(packagePath).with_data_values(packageValues).eval(), addKappAnnotations(name, overlayedValues, orderedPackagesList)))
+#@     end
+#@   end
+
+#@ allInfo = struct.make(config=data.values, values=overlayedValues)
+#@ if overlayedValues.clusterPackages["educates"].enabled:
+--- #@ template.replace(overlay.apply(library.get("config").with_data_values(allInfo).eval(), addKappAnnotations("educates", overlayedValues, orderedPackagesList)))
+#@ else:
+--- #@ template.replace(overlay.apply(library.get("config").with_data_values(allInfo).eval()))
+#@ end
+#@ end

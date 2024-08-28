@@ -1,0 +1,22 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@ if data.values.service.useHostPorts == False:
+#@overlay/match by=overlay.subset({"kind":"DaemonSet", "metadata": {"name": "envoy"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by=overlay.subset({"name": "envoy"})
+        - name: envoy
+          ports:
+            #@overlay/match by=overlay.subset({"name": "http"})
+            - name: http
+              #@overlay/remove
+              hostPort: 80
+            #@overlay/match by=overlay.subset({"name": "https"})
+            - name: https
+              #@overlay/remove
+              hostPort: 443
+#@ end

@@ -15,13 +15,17 @@ import (
 )
 
 type ClusterPortalListOptions struct {
-	Kubeconfig string
+	KubeconfigOptions
 }
 
 func (o *ClusterPortalListOptions) Run() error {
 	var err error
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		return err
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -79,6 +83,13 @@ func (p *ProjectInfo) NewClusterPortalListCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 
 	return c

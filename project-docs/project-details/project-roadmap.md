@@ -40,7 +40,8 @@ they will be removed sometime in the 3.X series of Educates releases:
   resource definitions, but the `PackageRepository` resource type which bundles
   access to multiple versions will go away. This is being done because in-place
   rolling updates of the Educates version isn't always feasible and it is always
-  recommended to install from scratch rather than upgrading.
+  recommended to install from scratch rather than upgrading. **Changes made in
+  Educates 3.0.0.**
 
 * The `skaffold` command line tool will be removed. If this is required for a
   specific workshop it will need to install it as part of workshop setup.
@@ -62,7 +63,8 @@ Other notable changes intended to be made with version 3.X of Educates are:
   in the Kubernetes cluster is being removed. The `kapp-controller` package
   will still be able to be optionally installed as it may still be required by
   workshops that depend on it. The CLI will also support opinionated installs
-  of Educates to IaaS providers such as AWS, GCP and Azure.
+  of Educates to IaaS providers such as AWS, GCP and Azure. **Changes made in
+  Educates 3.0.0.**
 
 * First class support for OpenShift will be added back into Educates after
   having previously been removed. This will include support for using the

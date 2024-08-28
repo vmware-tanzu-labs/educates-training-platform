@@ -80,6 +80,10 @@ If Kyverno is not installed or enabled, enforcement of any security policies to 
 Carvel package installation
 ---------------------------
 
-The default installation method for Educates relies on the Carvel packaging system. For a streamlined install process you need to have the Carvel [kapp-controller](https://carvel.dev/kapp-controller/) operator pre-installed into the Kubernetes cluster. If using Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), this will already exist upon the Kubernetes cluster being created, however, for other Kubernetes distributions you will need to install it.
+The installation method for Educates relies on the [Carvel](https://carvel.dev/) packaging system. You have two options for installing Educates into an existing Kubernetes cluster.
 
-If ``kapp-controller`` is not available, Educates can still be installed but will require many more manual steps. Also, certain builtin features of Educates related to virtual clusters will not be available as they rely on ``kapp-controller`` being installed in the host Kubernetes cluster to work.
+The first option is to use the `educates` CLI to deploy Educates and any required services to the Kubernetes cluster. In this case, although Educates uses the Carvel packaging system, you do not need the Carvel tools installed on your local host computer, nor do you need to have the Carvel [kapp-controller](https://carvel.dev/kapp-controller/) operator pre-installed into the Kubernetes cluster.
+
+The second option, and one which may be more suitable if setting up clusters to run Educates as part of a GitOps or CI/CD based installation process, is to have `kapp-controller` pre-installed into the Kubernetes cluster and use it to install Educates and any required services.
+
+If using Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), `kapp-controller` will already exist upon the Kubernetes cluster being created, however, for other Kubernetes distributions you will need to install `kapp-controller` yourself if wanting to use it to install Educates.

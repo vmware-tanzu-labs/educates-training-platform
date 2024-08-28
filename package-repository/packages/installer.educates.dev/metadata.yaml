@@ -1,0 +1,12 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: PackageMetadata
+metadata:
+  name: installer.educates.dev
+  namespace: default
+spec:
+  displayName: "Educates Training Platform Installer"
+  shortDescription: "Installer for Educates, a platform for hosting interactive workshop environments in Kubernetes."
+  providerName: VMware
+  maintainers:
+    - name: "Graham Dumpleton"
+    - name: "Jorge Morales"

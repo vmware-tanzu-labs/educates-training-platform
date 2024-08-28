@@ -21,6 +21,8 @@ The ``educates new-workshop`` command will default to creating files setup for u
 educates new-workshop lab-new-workshop --template classic
 ```
 
+The `classic` renderer is deprecated and will in time be removed so it is recommended that new workshops use the `hugo` renderer.
+
 In the workshop definition there are additional required fields that need to be filled out. These will be filled out with default values, but you can customize them at the time of workshop creation.
 
 The command line options for customizing the fields and their purpose are:
@@ -127,7 +129,15 @@ The tag being pushed to GitHub will trigger the following actions:
 * Creation of an OCI image artefact containing workshop content files and pushing it to the GitHub container registry.
 * Creation of a release against the GitHub repository and attach as assets Kubernetes resource files for deploying the workshop to Educates.
 
-The creation and the publishing of the OCI image artefact will be performed using the `educates publish-workshop` command. Your workshop definition must therefore be configured appropriately with a section describing how to publish the workshop image and optionally what should be included in the workshop image.
+The creation and the publishing of the OCI image artefact will be performed using the `educates publish-workshop` command. Your workshop definition must therefore be configured appropriately with a section describing how to publish the workshop image and optionally what should be included in the workshop image. In the case of workshops created using the `educates new-workshop` command, this configuration will be:
+
+```yaml
+spec:
+  publish:
+    image: $(image_repository)/{name}-files:$(workshop_version)
+```
+
+In the example above, the value of `{name}` would be the name of your workshop. That is, the same as `metadata.name` from the same resource definition. The image reference will match what is used in `spec.workshop.files.image.url`.
 
 Note that if the GitHub repository is not public, you will need to go to the settings for any images pushed to GitHub container registry and change the visibility from private or internal, to public before anyone can use the workshop.
 

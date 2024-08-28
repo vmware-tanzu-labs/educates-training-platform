@@ -167,6 +167,7 @@ if (process.env.ENABLE_REGISTRY == "true") {
     config.variables.push({ name: "registry_auth_file", content: process.env.REGISTRY_AUTH_FILE || "" })
     config.variables.push({ name: "registry_username", content: process.env.REGISTRY_USERNAME || "" })
     config.variables.push({ name: "registry_password", content: process.env.REGISTRY_PASSWORD || "" })
+    config.variables.push({ name: "registry_auth_token", content: process.env.REGISTRY_AUTH_TOKEN || "" })
     config.variables.push({ name: "registry_secret", content: process.env.REGISTRY_SECRET || "" })
 }
 
@@ -175,6 +176,7 @@ if (process.env.ENABLE_GIT == "true") {
     config.variables.push({ name: "git_host", content: process.env.GIT_HOST || "" })
     config.variables.push({ name: "git_username", content: process.env.GIT_USERNAME || "" })
     config.variables.push({ name: "git_password", content: process.env.GIT_PASSWORD || "" })
+    config.variables.push({ name: "git_auth_token", content: process.env.GIT_AUTH_TOKEN || "" })
 }
 
 for (let key in process.env)

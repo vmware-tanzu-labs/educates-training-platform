@@ -1,0 +1,16 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#! This file is used to set the default values for the vcluster installation
+#! Add to this file all the defaults that you don't want to be overidden by the user
+#! These values will override all the values provided by the user either in the global configuration
+#! or the clusterPackages.educates configuration
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  educates:
+    settings:
+      imagePuller:
+        enabled: false
+        #@overlay/replace
+        prePullImages: []

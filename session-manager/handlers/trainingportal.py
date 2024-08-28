@@ -86,6 +86,8 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     # Calculate name for the portal namespace.
 
     portal_name = name
+    portal_uid = uid
+
     portal_namespace = f"{portal_name}-ui"
 
     # Calculate access details for the portal. The hostname used to access the
@@ -388,6 +390,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
                 f"training.{OPERATOR_API_GROUP}/policy.name": "baseline",
             },
@@ -444,6 +447,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "portal",
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 },
             },
             "roleRef": {
@@ -472,6 +476,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "portal",
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 },
             },
             "roleRef": {
@@ -530,6 +535,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
     }
@@ -544,6 +550,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "type": "kubernetes.io/service-account-token",
@@ -557,6 +564,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "roleRef": {
@@ -584,6 +592,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "spec": {
@@ -604,6 +613,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "data": {
@@ -620,6 +630,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
             },
         },
@@ -633,6 +644,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         "deployment": "training-portal",
                         f"training.{OPERATOR_API_GROUP}/component": "portal",
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
                     },
                 },
@@ -850,6 +862,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "spec": {
@@ -868,6 +881,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
             "annotations": {},
         },
@@ -936,6 +950,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         "labels": {
                             f"training.{OPERATOR_API_GROUP}/component": "portal",
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         },
                     },
                     "spec": {
@@ -969,6 +984,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "portal",
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     },
                 },
                 "spec": {
@@ -997,6 +1013,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
             },
         },
         "spec": {

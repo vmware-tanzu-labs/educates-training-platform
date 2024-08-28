@@ -1,0 +1,46 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:base64", "base64")
+#@ load("@ytt:assert", "assert")
+#@ load("functions.star", "get_domains")
+
+#@ if data.values.certProvider=="acme-gcp":
+
+#@ (hasEmail, _) = assert.try_to(lambda: len(data.values.acme.email) > 0)
+#@ (hasProject, _) = assert.try_to(lambda: len(data.values.acme.gcp.project) > 0)
+#@ if (not hasProject):
+#@   assert.fail("`acme.gcp.project` must be provided")
+#@ end
+
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educateswildcard"}})
+---
+spec:
+  #@overlay/remove
+  selfSigned:
+  #@overlay/match missing_ok=True
+  acme:
+    #@ if/end hasEmail:
+    email: #@ data.values.acme.email
+    privateKeySecretRef:
+      name: educates-wildcard-acme
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+      #@overlay/match by=lambda i,l,r: "dns01" in l
+      - dns01:
+          cloudDNS:
+            project: #@ data.values.acme.gcp.project
+      #@overlay/match by=lambda i,l,r: "http01" in l
+      - http01:
+          ingress:
+            class: #@ data.values.acme.ingressClass
+
+#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educateswildcard"}})
+---
+metadata:
+  #@overlay/match missing_ok=True
+  namespace: #@ data.values.wildcardCertificateNamespace
+spec:
+  #@overlay/replace
+  dnsNames: #@ get_domains()
+
+#@ end

@@ -8,7 +8,7 @@ import (
 func (p *ProjectInfo) NewAdminPlatformCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "platform",
-		Short: "Install platform operators",
+		Short: "Manage Educates installation",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -19,9 +19,10 @@ func (p *ProjectInfo) NewAdminPlatformCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminPlatformConfigCmdGroup(),
 				p.NewAdminPlatformDeployCmd(),
 				p.NewAdminPlatformDeleteCmd(),
+				p.NewAdminPlatformConfigCmd(),
+				p.NewAdminPlatformValuesCmd(),
 			},
 		},
 	}

@@ -1,0 +1,35 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+#@ load("/functions.star", "isGlobalCaCertificateRefEnabled")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+#@ if isGlobalCaCertificateRefEnabled():
+  cert-manager:
+    enabled: true
+    settings:
+      clusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+  certs:
+    enabled: true
+    settings:
+      domains:
+        -  #@ data.values.clusterIngress.domain
+      certProvider: "local" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
+      local:
+        caCertificateRef:
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      wildcardCertificateNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      certmanagerClusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        caCertificateRef:
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+        #! NOTE: Nodes Operating System must be based of Debian in order to allow NodeInjector
+        caNodeInjector:
+          enabled: true
+#@ end

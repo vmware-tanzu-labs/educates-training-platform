@@ -442,8 +442,8 @@ def update_secret(namespace_name, rule):
         try:
             pykube.Secret(api, target_secret_obj).create()
 
-        except pykube.exceptions.HTTPError as e:
-            if e.code == 409:
+        except pykube.exceptions.HTTPError as exc:
+            if exc.code == 409:
                 logger.warning(
                     f"Secret {target_secret_name} in namespace {target_secret_namespace} already exists."
                 )

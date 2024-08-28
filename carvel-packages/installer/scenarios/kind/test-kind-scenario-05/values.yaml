@@ -1,0 +1,15 @@
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+  tlsCertificate:
+    tls.crt: |
+      -----BEGIN CERTIFICATE-----
+      "TLS_CRT"
+      -----END CERTIFICATE-----
+    tls.key: |
+      -----BEGIN CERTIFICATE-----
+      "TLS_KEY"
+      -----END CERTIFICATE-----

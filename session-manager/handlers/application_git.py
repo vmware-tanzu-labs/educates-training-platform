@@ -1,15 +1,19 @@
 import random
 import string
+import base64
 
 from .operator_config import OPERATOR_API_GROUP, INGRESS_DOMAIN, INGRESS_PROTOCOL
+from .helpers import substitute_variables
 
 
 def git_workshop_spec_patches(workshop_spec, application_properties):
     characters = string.ascii_letters + string.digits
 
-    git_host = f"git-$(session_namespace).{INGRESS_DOMAIN}"
-    git_username = "$(session_namespace)"
+    git_host = f"git-$(session_name).{INGRESS_DOMAIN}"
+    git_username = "$(session_name)"
     git_password = "".join(random.sample(characters, 32))
+
+    git_auth_token = "$(base64($(git_username):$(git_password)))"
 
     return {
         "spec": {
@@ -34,6 +38,10 @@ def git_workshop_spec_patches(workshop_spec, application_properties):
                         "name": "git_password",
                         "value": git_password,
                     },
+                    {
+                        "name": "git_auth_token",
+                        "value": git_auth_token,
+                    },
                 ],
                 "env": [
                     {
@@ -51,6 +59,10 @@ def git_workshop_spec_patches(workshop_spec, application_properties):
                     {
                         "name": "GIT_PASSWORD",
                         "value": git_password,
+                    },
+                    {
+                        "name": "GIT_AUTH_TOKEN",
+                        "value": git_auth_token,
                     },
                 ],
             }

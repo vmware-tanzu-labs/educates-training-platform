@@ -17,6 +17,10 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
 
+env:
+  GO_VERSION: "1.22.5"
+  BUILDKIT_VERSION: "v0.15.1"
+
 jobs:
   publish-generic-images:
     name: Publish
@@ -34,6 +38,7 @@ jobs:
           - image: tunnel-manager
           - image: image-cache
           - image: assets-server
+          - image: lookup-service
 
     steps:
       - name: Check out the repository
@@ -67,16 +72,12 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Restore Docker cache (amd64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/restore@v4
         with:
           path: /tmp/.buildx-cache-amd64-new
@@ -85,7 +86,7 @@ jobs:
             ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-
 
       - name: Restore Docker cache (arm64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/restore@v4
         with:
           path: /tmp/.buildx-cache-arm64-new
@@ -118,7 +119,7 @@ jobs:
           registry: ghcr.io
 
       - name: Build and push ${{matrix.image}} image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -130,7 +131,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{matrix.image}}
           platforms: linux/amd64
@@ -140,7 +141,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{matrix.image}}
           platforms: linux/arm64
@@ -149,19 +150,19 @@ jobs:
           push: false
 
       - name: Dump cache directory sizes
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         run: |
           du -ks /tmp/.buildx-cache-* || true
 
       - name: Save Docker cache (amd64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/save@v4
         with:
           path: /tmp/.buildx-cache-amd64-new
           key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
 
       - name: Save Docker cache (arm64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/save@v4
         with:
           path: /tmp/.buildx-cache-arm64-new
@@ -203,13 +204,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Verify docker daemon image contents
         run: |
@@ -265,7 +262,7 @@ jobs:
           registry: ghcr.io
 
       - name: Build and push base-environment image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/base-environment
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -277,7 +274,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/base-environment
           platforms: linux/amd64
@@ -291,7 +288,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/base-environment
           platforms: linux/arm64
@@ -364,13 +361,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Verify docker daemon image contents
         run: |
@@ -427,7 +420,7 @@ jobs:
           registry: ghcr.io
 
       - name: Build and push ${{matrix.image}} image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -443,7 +436,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/${{matrix.image}}
           platforms: linux/amd64
@@ -461,7 +454,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/${{matrix.image}}
           platforms: linux/arm64
@@ -515,82 +508,96 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
-      - name: Publish educates-cluster-essentials bundle
+      - name: Create publish values file
         shell: bash
         run: |
-          ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - \
-            --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
+          cat <<EOF > publish-values.yaml
+          clusterInfrastructure:
+            provider: "custom"
+          clusterPackages:
+            contour:
+              enabled: true
+              settings:
+                infraProvider: custom
+            cert-manager:
+              enabled: true
+              settings: {}
+            external-dns:
+              enabled: true
+              settings:
+                infraProvider: custom
+                deployment:
+                  args:
+                    - --provider=custom
+                    - --source=custom
+            certs:
+              enabled: true
+              settings:
+                certProvider: local
+                domains:
+                  - "example.com"
+                local:
+                  caCertificate:
+                    ca.crt: "AA"
+                    ca.key: "BB"
+            kyverno:
+              enabled: true
+              settings: {}
+            educates:
+              enabled: true
+              settings:
+                clusterIngress:
+                  domain: "educates.example.com"
+                imageRegistry:
+                  host: "ghcr.io"
+                  namespace: ${{env.REPOSITORY_OWNER}}
+                version: ${{env.REPOSITORY_TAG}}
+                lookupService:
+                  enabled: true
+          EOF
+
+      - name: Publish educates-installer bundle
+        shell: bash
+        run: |
+          # Create the kbld-images.yaml file with references to educates images
+          ytt -f carvel-packages/installer/config/images.yaml \
+              -f carvel-packages/installer/config/schema.yaml \
+              -v imageRegistry.host=ghcr.io \
+              -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
+              -v version=${{env.REPOSITORY_TAG}} > carvel-packages/installer/bundle/kbld/kbld-images.yaml
+          # Cat the generated file for debugging purposes
+          cat carvel-packages/installer/bundle/kbld/kbld-images.yaml
+          # Create images lock file. We use a sample values file to pass validations
+          # We properly rewrite references to images via kbld
+          ytt --data-values-file publish-values.yaml \
+              -f carvel-packages/installer/bundle/config | kbld -f - \
+              -f carvel-packages/installer/bundle/kbld/kbld-images.yaml \
+            --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
+          # Push the bundle to the registry
           imgpkg push \
-            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-cluster-essentials:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/cluster-essentials/bundle \
+            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-installer:${{env.REPOSITORY_TAG}} \
+            -f carvel-packages/installer/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/cluster-essentials/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-cluster-essentials-schema-openapi.yaml
-          ytt -f carvel-packages/cluster-essentials/config/package.yaml \
-            -f carvel-packages/cluster-essentials/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      - name: Save educates-cluster-essentials.yaml
-        uses: actions/upload-artifact@v4
-        with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      - name: Publish educates-training-platform bundle
-        shell: bash
-        run: |
-          ytt -f carvel-packages/training-platform/config/images.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
+          ytt -f carvel-packages/installer/config/app.yaml \
+            -f carvel-packages/installer/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
-            > carvel-packages/training-platform/bundle/kbld-images.yaml
-          cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - \
-            --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
-          imgpkg push \
-            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/training-platform/bundle \
-            --registry-username=${{github.actor}} \
-            --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/training-platform/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-training-platform-schema-openapi.yaml
-          ytt -f carvel-packages/training-platform/config/package.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-installer-app.yaml
+          # Copy and rename rbac.yaml file
+          cp carvel-packages/installer/config/rbac.yaml educates-installer-app-rbac.yaml
 
-      - name: Save educates-training-platform.yaml
+      - name: Save educates-installer-app.yaml
         uses: actions/upload-artifact@v4
         with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-app.yaml
+          path: educates-installer-app.yaml
 
-      - name: Publish educates-training-platform package repository
-        shell: bash
-        run: |
-          ytt -f package-repository/packages | kbld -f - --imgpkg-lock-output package-repository/.imgpkg/images.yml
-          imgpkg push --debug -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-packages:${{env.REPOSITORY_TAG}} -f package-repository --registry-username=${{github.actor}} --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/repository.yaml -v packageRepository=ghcr.io/${{env.REPOSITORY_OWNER}} -v repositoryVersion=${{env.REPOSITORY_TAG}} > educates-packagerepository.yaml
-
-      - name: Save educates-training-platform repository.yaml
+      - name: Save educates-installer-app-rbac.yaml
         uses: actions/upload-artifact@v4
         with:
-          name: educates-packagerepository.yaml
-          path: educates-packagerepository.yaml
-
-      - name: Save educates-training-platform package repository
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-repository
-          path: package-repository
+          name: educates-installer-app-rbac.yaml
+          path: educates-installer-app-rbac.yaml
 
   build-client-programs-linux-amd64:
     name: Build (clients) / amd64@linux
@@ -609,7 +616,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -646,7 +653,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -683,7 +690,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -725,7 +732,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -821,13 +828,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Generate container image metadata
         id: meta
@@ -853,7 +856,7 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
 
       - name: Build and push docker-extension image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: docker-extension
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -888,20 +891,15 @@ jobs:
           echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
 
-      - name: Restore packagerepository.yaml
+      - name: Restore educates-installer-app.yaml
         uses: actions/download-artifact@v4
         with:
-          name: educates-packagerepository.yaml
+          name: educates-installer-app.yaml
 
-      - name: Restore educates-cluster-essentials.yaml
+      - name: Restore educates-installer-app-rbac.yaml
         uses: actions/download-artifact@v4
         with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-app-rbac.yaml
 
       - name: Restore educates-linux-amd64
         uses: actions/download-artifact@v4
@@ -926,13 +924,12 @@ jobs:
       - name: Generate file checksums for CLI binaries
         shell: bash
         run: |
-          sha256sum educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
           sha256sum educates-linux-amd64 >> checksums.txt
           sha256sum educates-linux-arm64 >> checksums.txt
-          sha256sum educates-packagerepository.yaml >> checksums.txt
-          sha256sum educates-training-platform-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
+          sha256sum educates-installer-app.yaml >> checksums.txt
+          sha256sum educates-installer-app-rbac.yaml >> checksums.txt
           echo 'File Checksums' >> release-notes.md
           echo '--------------' >> release-notes.md
           echo '```' >> release-notes.md
@@ -951,7 +948,7 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -962,67 +959,9 @@ jobs:
           body_path: release-notes.md
           files: |
             checksums.txt
-            educates-packagerepository.yaml
-            educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-            educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            educates-installer-app.yaml
+            educates-installer-app-rbac.yaml
             educates-linux-amd64
             educates-linux-arm64
             educates-darwin-amd64
             educates-darwin-arm64
-
-  commit-packages:
-    name: Commit
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs:
-      - release-artifacts
-
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Calculate variables
-        shell: bash
-        run: |
-          IS_FORK=$(if [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_EVENT_PATH ]]; then jq -r .repository.fork <<< $(cat $GITHUB_EVENT_PATH); else echo false; fi)
-          REPOSITORY_TAG=${GITHUB_REF##*/}
-          if [[ "$REPOSITORY_TAG" == *-* ]]; then
-            PRERELEASE=true
-          else
-            PRERELEASE=false
-          fi
-          echo "IS_FORK=${IS_FORK}" >>${GITHUB_ENV}
-          echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
-          echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
-
-      - name: Restore educates-cluster-essentials.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/
-
-      - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/
-
-      - name: Create pull request for package repository files
-        if: ${{ (env.IS_FORK == 'false') && (env.PRERELEASE == 'false') }}
-        uses: peter-evans/create-pull-request@v5
-        with:
-          add-paths: |
-            package-repository
-          commit-message: "Add package files for version ${{env.REPOSITORY_TAG}}."
-          branch: release/patch
-          base: develop
-          title: "Add package files for version ${{env.REPOSITORY_TAG}}."
-          body: >
-            This is an automated pull request to add the package files for
-            version ${{env.REPOSITORY_TAG}} to the repository. If the release is
-            successful and you are working in the main Educates repository, this
-            needs to be merged to the `develop` branch before making a further
-            release. You should avoid merging this pull request if working in a
-            fork of the main Educates repository as it will result in changes to
-            the `develop` branch which have details specific to your fork, which
-            should never end up back in the main Educates repository.

@@ -9,16 +9,16 @@ import (
 	"strings"
 	"time"
 
+	imgpkgcmd "carvel.dev/imgpkg/pkg/imgpkg/cmd"
+	"carvel.dev/kapp/pkg/kapp/cmd"
+	vendirsync "carvel.dev/vendir/pkg/vendir/cmd"
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
+	yttcmdui "carvel.dev/ytt/pkg/cmd/ui"
+	"carvel.dev/ytt/pkg/files"
+	"carvel.dev/ytt/pkg/yamlmeta"
 	"github.com/cppforlife/go-cli-ui/ui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	imgpkgcmd "github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/cmd"
-	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd"
-	vendirsync "github.com/vmware-tanzu/carvel-vendir/pkg/vendir/cmd"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
-	yttcmdui "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
-	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
-	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -239,6 +239,9 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to push image artifact for workshop")
 	}
+
+	// We add a newline to output for better readability.
+	fmt.Println()
 
 	// Export modified workshop definition file.
 

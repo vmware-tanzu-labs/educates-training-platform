@@ -27,14 +27,10 @@ Educates
 
   installation-guides/cluster-requirements
   installation-guides/installation-instructions
+  installation-guides/cli-based-installation
+  installation-guides/carvel-based-installation
+  installation-guides/infrastructure-providers
   installation-guides/configuration-settings
-
-..
-  installation-guides/training-session
-  installation-guides/under-the-covers
-  installation-guides/deleting-operator
-  installation-guides/deploying-to-minikube
-  installation-guides/deploying-to-kind
 
 .. toctree::
   :maxdepth: 2
@@ -85,6 +81,7 @@ Educates
   :maxdepth: 2
   :caption: Release Notes:
 
+  release-notes/version-3.0.0
   release-notes/version-2.7.2
   release-notes/version-2.7.1
   release-notes/version-2.7.0

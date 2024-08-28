@@ -1,0 +1,1 @@
+kind with without educates
