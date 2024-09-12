@@ -7,6 +7,9 @@
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   educates:
-    #@ if/end isClusterPackageExplicitDisabled("educates"):
+    #@ if isClusterPackageExplicitDisabled("educates"):
+    #@overlay/replace
+    enabled: false
     #@overlay/replace
     settings: {}
+    #@ end
