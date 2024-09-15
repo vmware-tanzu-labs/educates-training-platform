@@ -86,6 +86,8 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     data = await request.json()
 
+    service_state = request.app["service_state"]
+
     client = request["remote_client"]
 
     tenant_name = data.get("tenantName")
@@ -121,8 +123,6 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     # Check that client is allowed access to this tenant.
 
-    client = request["remote_client"]
-
     if not client.allowed_access_to_tenant(tenant_name):
         logger.warning(
             "Client %r not allowed access to tenant %r", client.name, tenant_name
@@ -130,9 +130,32 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
         return web.Response(text="Client not allowed access to tenant", status=403)
 
-    # Find the portals accessible to the tenant which hosts the workshop.
+    # If a user ID is supplied, check all of the portals to see if this user
+    # already has a workshop session for this workshop. This is done before
+    # checking whether a portal is accessible to the tenant so depends on the
+    # user ID being unique across all tenants. We do it before checking access
+    # to the tenant so that we can return a session if the user already has one
+    # even if the tenant no longer has access because of label changes.
 
-    service_state = request.app["service_state"]
+    cluster_database = service_state.cluster_database
+
+    if user_id:
+        for cluster in cluster_database.get_clusters():
+            for portal in cluster.get_portals():
+                session = portal.find_existing_workshop_session_for_user(
+                    user_id, workshop_name
+                )
+
+                if session:
+                    data = await session.reacquire_workshop_session(index_url)
+
+                    if data:
+                        data["tenantName"] = tenant_name
+                        return web.json_response(data)
+
+    # Get the list of portals hosting the workshop and calculate the subset that
+    # are accessible to the tenant.
+
     tenant_database = service_state.tenant_database
 
     tenant = tenant_database.get_tenant(tenant_name)
@@ -141,9 +164,6 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         logger.error("Configuration for tenant %r could not be found", tenant_name)
 
         return web.Response(text="Tenant not available", status=503)
-
-    # Get the list of portals hosting the workshop and calculate the subset
-    # that are accessible to the tenant.
 
     accessible_portals = tenant.portals_which_are_accessible()
 
@@ -165,22 +185,6 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         )
 
         return web.Response(text="Workshop not available", status=503)
-
-    # If a user ID is supplied, check each of the portals to see if this user
-    # already has a workshop session for this workshop.
-
-    if user_id:
-        for portal in selected_portals:
-            session = portal.find_existing_workshop_session_for_user(
-                user_id, workshop_name
-            )
-
-            if session:
-                data = await session.reacquire_workshop_session(index_url)
-
-                if data:
-                    data["tenantName"] = tenant_name
-                    return web.json_response(data)
 
     # Find the set of workshop environments for the specified workshop that are
     # in a running state. If there are no such environments, then the workshop
