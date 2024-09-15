@@ -24,7 +24,7 @@
     "cors": "^2.8.5",
     "css-element-queries": "^1.2.3",
     "elliptic": ">=6.5.4",
-    "express": "^4.19.2",
+    "express": "^4.21.0",
     "express-basic-auth": "^1.2.1",
     "express-session": "^1.17.3",
     "fontfaceobserver": "^2.3.0",
