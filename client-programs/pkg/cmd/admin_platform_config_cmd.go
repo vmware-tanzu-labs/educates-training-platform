@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -56,6 +57,17 @@ func (o *PlatformConfigOptions) Run() error {
 		if err != nil {
 			return err
 		}
+
+		fullConfig.Version = o.Version
+
+		// Set image registry host and namespace by splitting the package
+		// repository into host and namespace. That is split on the first '/'.
+
+		imageRepositoryHost := strings.SplitN(o.PackageRepository, "/", 2)[0]
+		imageRepositoryNamespace := strings.SplitN(o.PackageRepository, "/", 2)[1]
+
+		fullConfig.ImageRegistry.Host = imageRepositoryHost
+		fullConfig.ImageRegistry.Namespace = imageRepositoryNamespace
 
 		config.PrintConfigToStdout(fullConfig)
 	}
