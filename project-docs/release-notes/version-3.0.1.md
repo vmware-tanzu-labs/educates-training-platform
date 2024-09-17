@@ -34,3 +34,7 @@ Bugs Fixed
   installer, if a CA certificate was provided and installation of `educates`
   training platform component was being disabled, the latter was still being
   installed even though disabled.
+
+* If a locally managed config file had not been created using the command
+  `educates local config edit` prior to running `educates create-cluster`, it
+  would fail as the local config directory wasn't being created automatically.

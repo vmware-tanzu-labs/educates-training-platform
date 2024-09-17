@@ -102,7 +102,11 @@ func DeployResolver(domain string, targetAddress string, extraDomains []string) 
 	configFileDir := utils.GetEducatesHomeDir()
 	configFileName := path.Join(configFileDir, "dnsmasq.conf")
 
-	_ = os.Mkdir(configFileDir, os.ModePerm)
+	err = os.MkdirAll(configFileDir, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create config directory")
+	}
 
 	err = os.WriteFile(configFileName, clusterConfigData.Bytes(), 0644)
 
