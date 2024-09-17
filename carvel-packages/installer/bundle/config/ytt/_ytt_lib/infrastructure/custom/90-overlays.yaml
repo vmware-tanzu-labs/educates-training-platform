@@ -21,6 +21,8 @@ clusterPackages:
   kapp-controller:
     #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "kapp-controller") and hasattr(data.values.clusterPackages["kapp-controller"], "settings"):
     settings: #@ data.values.clusterPackages["kapp-controller"].settings
+
+#@overlay/merge
   educates:
-    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "educates") and hasattr(data.values.clusterPackages["educates"], "settings"):
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "educates") and hasattr(data.values.clusterPackages["educates"], "settings") and data.values.clusterPackages["educates"].settings:
     settings: #@ data.values.clusterPackages["educates"].settings
