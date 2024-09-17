@@ -1,10 +1,10 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
-#@ load("educates.lib.yaml", "copy_all_educates_values")
+#@ load("educates.lib.yaml", "copy_builtin_cli_values")
 
-#! This copies user provided values for the custom infrastructure provider.
+#! This copies only builtin CLI provides values.
 
-#! #@overlay/match-child-defaults missing_ok=True
-#! clusterPackages:
-#!   educates:
-#!     settings: #@ copy_all_educates_values()
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  educates:
+    settings: #@ copy_builtin_cli_values()

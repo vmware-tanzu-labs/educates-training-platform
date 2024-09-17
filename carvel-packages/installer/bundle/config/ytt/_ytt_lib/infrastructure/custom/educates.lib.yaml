@@ -172,3 +172,14 @@ lookupService:
   #@ if/end hasattr(data.values.lookupService, "ingressPrefix") and data.values.lookupService.ingressPrefix != None:
   ingressPrefix: #@ data.values.lookupService.ingressPrefix
 #@ end
+
+#@ def copy_builtin_cli_values():
+#@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
+imageRegistry:
+  #@ if/end hasattr(data.values.imageRegistry, "namespace") and data.values.imageRegistry.namespace != None:
+  namespace: #@ data.values.imageRegistry.namespace
+  #@ if/end hasattr(data.values.imageRegistry, "host") and data.values.imageRegistry.host != None:
+  host: #@ data.values.imageRegistry.host
+#@ if/end hasattr(data.values, "version") and data.values.version != None:
+version: #@ data.values.version
+#@ end
