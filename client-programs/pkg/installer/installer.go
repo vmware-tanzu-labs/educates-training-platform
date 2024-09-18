@@ -269,12 +269,12 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 
 	kbldFiles := []*files.File{}
 	// TODO: Revisit when this needs to be used
-	if !skipImageResolution {
-		kbldFiles, err = files.NewSortedFilesFromPaths([]string{filepath.Join(inputDir, "kbld/kbld-images.yaml")}, files.SymlinkAllowOpts{})
-		if err != nil {
-			return "", err
-		}
+	// if !skipImageResolution {
+	kbldFiles, err = files.NewSortedFilesFromPaths([]string{filepath.Join(inputDir, "kbld/kbld-images.yaml")}, files.SymlinkAllowOpts{})
+	if err != nil {
+		return "", err
 	}
+	// }
 
 	opts.DataValuesFlags = cmdtpl.DataValuesFlags{
 		FromFiles: []string{"values", "images"},
