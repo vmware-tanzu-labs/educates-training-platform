@@ -1,0 +1,13 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#! This enables packages based on the user input
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  contour:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "contour") and hasattr(data.values.clusterPackages.kyverno, "contour"):
+    enabled: #@ data.values.clusterPackages.contour.enabled
+  kyverno:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "kyverno") and hasattr(data.values.clusterPackages.kyverno, "enabled"):
+    enabled: #@ data.values.clusterPackages.kyverno.enabled

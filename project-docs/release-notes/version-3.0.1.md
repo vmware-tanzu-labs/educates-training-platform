@@ -8,6 +8,13 @@ For details on significant changes in future versions, including feature
 deprecations and removals which may necessitate updates to existing workshops,
 see [Upcoming changes](upcoming-changes).
 
+New Features
+------------
+
+* Added opinionated installer configuration for Minikube. Will by default
+  install Contour as the ingress controller, but can be disabled if using the
+  nginx ingress controller provided by Minikube.
+
 Features Changed
 ----------------
 
