@@ -38,3 +38,7 @@ Bugs Fixed
 * If a locally managed config file had not been created using the command
   `educates local config edit` prior to running `educates create-cluster`, it
   would fail as the local config directory wasn't being created automatically.
+
+* Using the `custom` provider when the `educates` component was enabled, would
+  fail when using CLI to create or update a cluster as image references were not
+  being replaced with references to where released image artifacts were stored.
