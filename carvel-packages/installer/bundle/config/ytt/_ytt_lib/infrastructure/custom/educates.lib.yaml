@@ -173,7 +173,7 @@ lookupService:
   ingressPrefix: #@ data.values.lookupService.ingressPrefix
 #@ end
 
-#@ def copy_builtin_cli_values():
+#@ def copy_core_educates_values():
 #@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
 imageRegistry:
   #@ if/end hasattr(data.values.imageRegistry, "namespace") and data.values.imageRegistry.namespace != None:
