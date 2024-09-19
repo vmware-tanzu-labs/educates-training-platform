@@ -6,7 +6,7 @@
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   contour:
-    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "contour") and hasattr(data.values.clusterPackages.kyverno, "contour"):
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "contour") and hasattr(data.values.clusterPackages.contour, "contour"):
     enabled: #@ data.values.clusterPackages.contour.enabled
   kyverno:
     #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "kyverno") and hasattr(data.values.clusterPackages.kyverno, "enabled"):
