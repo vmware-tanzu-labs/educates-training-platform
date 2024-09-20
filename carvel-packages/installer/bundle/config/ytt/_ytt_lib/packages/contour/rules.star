@@ -1,5 +1,8 @@
 def check_infra(val):
-  if val["infraProvider"] in ["aws", "gcp", "azure", "minikube"]:
+  if val["infraProvider"] in ["minikube"]:
+    return val["service"]["type"] in ["ClusterIP", "LoadBalancer"] or fail("{} infra provider requires service.type to be ClusterIP or LoadBalancer".format(val["infraProvider"]))
+  end
+  if val["infraProvider"] in ["aws", "gcp", "azure"]:
     return val["service"]["type"] == "LoadBalancer" or fail("{} infra provider requires service.type to be LoadBalancer".format(val["infraProvider"]))
   end
   if val["infraProvider"] in ["kind"]:
