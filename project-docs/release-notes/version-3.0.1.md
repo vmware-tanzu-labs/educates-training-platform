@@ -49,7 +49,3 @@ Bugs Fixed
 * Using the `custom` provider when the `educates` component was enabled, would
   fail when using CLI to create or update a cluster as image references were not
   being replaced with references to where released image artifacts were stored.
-
-* Internal infrastructure provider setting for when installing `contour` was
-  enforcing use of `ClusterIP` for Envoy service when provider specified as
-  `minikube` when should have required `LoadBalancer`.
