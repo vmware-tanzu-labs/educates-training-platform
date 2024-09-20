@@ -77,7 +77,22 @@ Installation is supported on a local Kubernetes cluster created using [Kind](htt
 
 The components which will be installed are the Educates training platform, Contour as the ingress controller, and Kyverno for cluster and workshop security policy enforcement.
 
-For this case it is required that the Kind cluster be configured to [map ports 80/443](https://kind.sigs.k8s.io/docs/user/ingress/) such that the Kubernetes ingress controller is accessible via the host.
+For this case it is required that the Kind cluster be configured to [map ports 80/443](https://kind.sigs.k8s.io/docs/user/ingress/) such that the Kubernetes ingress controller is accessible via the host. The wildcard ingress domain must map to the host IP.
+
+Note that if using the `educates create-cluster` command the Kind cluster will be created for you.
+
+Installation to Minikube
+------------------------
+
+Installation is supported on a local Kubernetes cluster created using [Minikube](https://minikube.sigs.k8s.io). This is indicated by setting `provider` to `minikube`.
+
+The components which will be installed are the Educates training platform, Contour as the ingress controller, and Kyverno for cluster and workshop security policy enforcement.
+
+If using the `docker` driver for Minikube, you will need to use the `minikube tunnel` command to expose the ingress controller and the wildcard ingress domain must map to the host IP.
+
+If using a driver for Minikube which exposes the cluster on it's own IP address, the wildcard ingress domain must map to the IP of the Minikube cluster.
+
+If you do not want to use Contour as the ingress controller, but use the Nginx ingress controller directly supported by Minikube, you can instead set `provider` to `generic`, or alternatively still use `minikube`, but disable installation of Contour.
 
 Installation to OpenShift
 -------------------------
