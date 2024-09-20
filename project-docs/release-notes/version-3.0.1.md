@@ -8,6 +8,13 @@ For details on significant changes in future versions, including feature
 deprecations and removals which may necessitate updates to existing workshops,
 see [Upcoming changes](upcoming-changes).
 
+New Features
+------------
+
+* Added opinionated installer configuration for Minikube. Will by default
+  install Contour as the ingress controller, but can be disabled if using the
+  nginx ingress controller provided by Minikube.
+
 Features Changed
 ----------------
 
@@ -38,3 +45,7 @@ Bugs Fixed
 * If a locally managed config file had not been created using the command
   `educates local config edit` prior to running `educates create-cluster`, it
   would fail as the local config directory wasn't being created automatically.
+
+* Using the `custom` provider when the `educates` component was enabled, would
+  fail when using CLI to create or update a cluster as image references were not
+  being replaced with references to where released image artifacts were stored.

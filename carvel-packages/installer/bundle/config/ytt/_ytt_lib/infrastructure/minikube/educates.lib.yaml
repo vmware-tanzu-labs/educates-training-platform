@@ -1,6 +1,5 @@
 #@ load("@ytt:data", "data")
 
-#! TODO: Customize certs name reference in eks
 #@ def copy_all_educates_values():
 
 #@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
@@ -72,7 +71,7 @@ trainingPortal:
       username: #@ data.values.trainingPortal.credentials.admin.username
       #@ if/end hasattr(data.values.trainingPortal.credentials.admin, "password") and data.values.trainingPortal.credentials.admin.password != None:
       password: #@ data.values.trainingPortal.credentials.admin.password
-    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.robot != None:
+    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.admin != None:
     robot:
       #@ if/end hasattr(data.values.trainingPortal.credentials.robot, "username") and data.values.trainingPortal.credentials.robot.username != None:
       username: #@ data.values.trainingPortal.credentials.robot.username
@@ -171,17 +170,4 @@ lookupService:
   enabled: #@ data.values.lookupService.enabled
   #@ if/end hasattr(data.values.lookupService, "ingressPrefix") and data.values.lookupService.ingressPrefix != None:
   ingressPrefix: #@ data.values.lookupService.ingressPrefix
-#@ end
-
-#@ def copy_core_educates_values():
-#@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
-imageRegistry:
-  #@ if/end hasattr(data.values.imageRegistry, "namespace") and data.values.imageRegistry.namespace != None:
-  namespace: #@ data.values.imageRegistry.namespace
-  #@ if/end hasattr(data.values.imageRegistry, "host") and data.values.imageRegistry.host != None:
-  host: #@ data.values.imageRegistry.host
-#@ if/end hasattr(data.values, "version") and data.values.version != None:
-version: #@ data.values.version
-#@ if/end hasattr(data.values, "imageVersions") and data.values.imageVersions != None:
-imageVersions: #@ data.values.imageVersions
 #@ end
