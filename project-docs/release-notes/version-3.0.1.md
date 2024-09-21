@@ -15,6 +15,10 @@ New Features
   install Contour as the ingress controller, but can be disabled if using the
   nginx ingress controller provided by Minikube.
 
+* Added opinionated installer configuration for OpenShift. Will use the native
+  OpenShift ingress controller. Will force use of security context constraints
+  (SCC) for cluster security policy engine.
+
 Features Changed
 ----------------
 
