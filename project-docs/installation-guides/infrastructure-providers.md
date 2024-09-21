@@ -97,53 +97,11 @@ If you do not want to use Contour as the ingress controller, but use the Nginx i
 Installation to OpenShift
 -------------------------
 
-We are not currently providing a pre-canned configuration for installing Educates in OpenShift. We are working on including configuration for OpenShift, but believe the following configuration should work in the interim.
+Installation is supported on a local Kubernetes cluster created using [OpenShift](https://docs.openshift.com). This is indicated by setting `provider` to `openshift`.
 
-```yaml
-# Specify the infrastructure provider hosting the Kubernetes cluster.
-# We are using "custom" and providing the configuration ourselves.
+The components which will be installed are the Educates training platform, and Kyverno for workshop security policy enforcement.
 
-clusterInfrastructure:
-  provider: custom
-
-# Specify the ingress domain to be used to access the workshops hosted by
-# the Educates installation.
-
-clusterIngress:
-  domain: educates-local-dev.test
-
-# Specify component packages to be installed for this configuration.
-
-clusterPackages:
-  # Disable installation of Contour as using OpenShift standard ingress
-  # controller.
-
-  contour:
-    enabled: false
-
-  # Enable installation of Kyverno for workshop security policy enforcement.
-
-  kyverno:
-    enabled: true
-
-  # Ensure that Educates training platform is installed.
-
-  educates:
-    enabled: true
-
-# Configure cluster security policy enforcement to be done using OpenShift
-# security context constraints.
-
-clusterSecurity:
-  policyEngine: security-context-constraints
-
-# Configure workshop security policy enforcement to be done using Kyverno.
-
-workshopSecurity:
-  rulesEngine: kyverno
-```
-
-The standard OpenShift ingress controller will be used.
+OpenShift security context constraints (SCC) will be used for cluster security policies. For ingress, the native OpenShift ingress controller will be used.
 
 Installation to a vCluster
 --------------------------
