@@ -2846,7 +2846,7 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
             },
         }
 
-        if INGRESS_PROTOCOL == "https":
+        if INGRESS_SECRET:
             registry_ingress_body["metadata"]["annotations"].update(
                 {
                     "ingress.kubernetes.io/force-ssl-redirect": "true",
@@ -3120,7 +3120,7 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
         },
     }
 
-    if INGRESS_PROTOCOL == "https":
+    if INGRESS_SECRET:
         ingress_body["metadata"]["annotations"].update(
             {
                 "ingress.kubernetes.io/force-ssl-redirect": "true",

@@ -53,3 +53,10 @@ Bugs Fixed
 * Using the `custom` provider when the `educates` component was enabled, would
   fail when using CLI to create or update a cluster as image references were not
   being replaced with references to where released image artifacts were stored.
+
+* When an ingress secret was not being supplied, but `clusterIngress.protocol`
+  was being forcibly set to `https` due to HTTPS connections being terminated by
+  a front end router, annotations were wrongly being added to ingresses to force
+  redirection from `http` to `https`. This would result in a redirect loop.
+  Annotations should not have been added and redirection from `http` to `https`
+  should instead have been done by the front end router.
