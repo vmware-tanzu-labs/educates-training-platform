@@ -1632,7 +1632,7 @@ def workshop_environment_create(
                 },
             }
 
-            if INGRESS_PROTOCOL == "https":
+            if INGRESS_SECRET:
                 artifacts_ingress_body["metadata"]["annotations"].update(
                     {
                         "ingress.kubernetes.io/force-ssl-redirect": "true",
@@ -1973,7 +1973,7 @@ def workshop_environment_create(
                 },
             }
 
-            if INGRESS_PROTOCOL == "https":
+            if INGRESS_SECRET:
                 assets_server_ingress_body["metadata"]["annotations"].update(
                     {
                         "ingress.kubernetes.io/force-ssl-redirect": "true",

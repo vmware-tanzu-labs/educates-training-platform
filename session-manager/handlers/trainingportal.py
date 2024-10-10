@@ -913,7 +913,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             "kubernetes.io/ingress.class"
         ] = INGRESS_CLASS
 
-    if INGRESS_PROTOCOL == "https":
+    if INGRESS_SECRET:
         ingress_body["metadata"]["annotations"].update(
             {
                 "ingress.kubernetes.io/force-ssl-redirect": "true",
