@@ -49,7 +49,8 @@ clusterPackages:
         args:
           project: #@ data.values.clusterInfrastructure.gcp.project
           domain_filter: #@ data.values.clusterInfrastructure.gcp.cloudDNS.zone if hasattr(data.values.clusterInfrastructure.gcp.cloudDNS, "zone") else data.values.clusterIngress.domain
-          txt_owner_id: "educates"
+          txt_owner_id: #@ data.values.clusterIngress.domain
+          policy: sync
   certs:
     enabled: #@ isClusterPackageEnableByDefault("certs")
     settings:
