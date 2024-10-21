@@ -27,6 +27,8 @@ Support is currently provided for the following infrastructure providers.
 * `eks` - Amazon Elastic Kubernetes Service (EKS)
 * `gke` - Google Kubernetes Engine (GKE)
 * `kind` - Kubernetes in Docker (Kind)
+* `minikube` - Minikube
+* `openshift` - OpenShift (RedHat)
 * `vcluster` - Virtual Kubernetes Cluster (Loft)
 
 Although using a pre-canned configuration, you can still provide customizations on top to modify what is installed and how.

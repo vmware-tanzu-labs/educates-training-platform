@@ -1,0 +1,12 @@
+clusterInfrastructure:
+  provider: "kind"
+  caCertificateRef:
+    name: "educates-example-com-fromcache-ca"
+    namespace: "educates-secrets"
+clusterPackages:
+  educates:
+    enabled: false
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"

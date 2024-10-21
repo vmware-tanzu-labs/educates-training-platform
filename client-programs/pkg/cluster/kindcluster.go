@@ -80,7 +80,16 @@ func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, ima
 	}
 
 	// Save the cluster config to a file
-	kindConfigPath := filepath.Join(utils.GetEducatesHomeDir(), "educates-cluster-config.yaml")
+
+	configFileDir := utils.GetEducatesHomeDir()
+
+	err = os.MkdirAll(configFileDir, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create config directory")
+	}
+
+	kindConfigPath := filepath.Join(configFileDir, "educates-cluster-config.yaml")
 	err = os.WriteFile(kindConfigPath, clusterConfigData.Bytes(), 0644)
 	if err != nil {
 		return errors.Wrap(err, "failed to write cluster config to file")

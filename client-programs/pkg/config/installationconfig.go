@@ -474,9 +474,9 @@ func PrintConfigToStdout(config *InstallationConfig) error {
 
 func ValidateProvider(provider string) error {
 	switch provider {
-	case "eks", "kind", "gke", "custom", "vcluster", "generic":
+	case "eks", "kind", "gke", "custom", "vcluster", "generic", "minikube", "openshift":
 		return nil
 	default:
-		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom, vcluster, generic)")
+		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom, vcluster, generic, minikube, openshift)")
 	}
 }
